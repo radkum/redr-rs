@@ -1,7 +1,7 @@
 # redr-rs
 Rust Endpoint, Detection and Response
 
-###Directory hierarchy
+### Directory hierarchy
 **ramon-km** - minifilter project 
 
 **ramon-um** - user mode program to configure minifilter
