@@ -1,0 +1,35 @@
+[package]
+name = "detection"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+common-um = { path = "../common-um" }
+signatures = { path = "../signatures" }
+common = { path = "../../../common"}
+cleaner = { path = "../cleaner" }
+
+console = "~0"
+downcast-rs = "1.2.1"
+log = "~0"
+sha2 = "~0"
+thiserror = "~1"
+widestring = "~1"
+tokio = { version = "1.36.0", features = ["full"] }
+winsafe = "~0"
+ansi_term = "~0"
+
+[dependencies.windows-sys]
+version = "0.52"
+features = [
+    "Win32_Storage",
+    "Win32_Foundation",
+    "Win32_System_IO",
+    "Win32_Security",
+    "Win32_Storage_InstallableFileSystems",
+    "Win32_System",
+    "Win32_System_Diagnostics",
+    "Win32_System_Diagnostics_Debug",
+]

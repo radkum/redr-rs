@@ -1,0 +1,21 @@
+[package]
+name = "static-analysis-2"
+version = "0.1.0"
+edition = "2021"
+description = "Command line interface of REDR"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+detection = { path = "../detection" }
+sandbox = { path = "../sandbox" }
+scanner = { path = "../scanner" }
+signatures = { path = "../signatures" }
+common-um = { path = "../common-um" }
+
+anyhow = "~1"
+clap = { version = "~4", features = ["derive"] }
+console = "~0"
+env_logger = "~0"
+log = "~0"
+ansi_term = "~0"

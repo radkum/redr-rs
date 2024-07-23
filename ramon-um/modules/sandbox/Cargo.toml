@@ -1,0 +1,17 @@
+[package]
+name = "sandbox"
+version = "0.1.0"
+edition = "2021"
+build = "build.rs"
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+common = { path = "../../../common" }
+common-um = { path = "../common-um" }
+signatures = { path = "../signatures" }
+
+ffi-support = "~0"
+log = "~0"
+sha2 = "~0"
+thiserror = "~1"
+ansi_term = "~0"

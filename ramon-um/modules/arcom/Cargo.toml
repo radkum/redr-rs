@@ -1,0 +1,15 @@
+[package]
+name = "arcom"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ole-extractor = { path = "unpackers/ole-extractor" }
+zip-extractor = { path = "unpackers/zip-extractor" }
+shared-arcom = { path = "shared-arcom"}
+common-um = { path = "../common-um"}
+
+lazy_static = "~1"
+log = "~0"
