@@ -17,12 +17,7 @@ use sig_set::{
     SigSetTrait,
 };
 
-use crate::{
-    sig_store::sig_set::{
-        SigSetType,
-    },
-    SigSetError,
-};
+use crate::{sig_store::sig_set::SigSetType, SigSetError};
 
 #[derive(Debug, Serialize, Deserialize)]
 struct StoreHeader {

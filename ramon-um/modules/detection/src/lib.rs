@@ -21,9 +21,7 @@ use common::{
     hasher::MemberHasher,
 };
 use console::Term;
-use signatures::sig_store::{
-    SignatureStore,
-};
+use signatures::sig_store::SignatureStore;
 use widestring::u16str;
 use windows_sys::Win32::{
     Foundation::STATUS_SUCCESS,

@@ -1,5 +1,5 @@
 [package]
-name = "static-analysis-2"
+name = "ramon-client"
 version = "0.1.0"
 edition = "2021"
 description = "Command line interface of REDR"
