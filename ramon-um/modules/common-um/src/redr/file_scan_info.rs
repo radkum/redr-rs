@@ -1,8 +1,7 @@
-use std::{cell::RefCell, path::PathBuf, rc::Rc};
-use std::sync::{Arc, RwLock};
-use std::borrow::Borrow;
-use std::borrow::BorrowMut;
-use std::ops::{Deref, DerefMut};
+use std::{
+    path::PathBuf,
+    sync::{Arc, RwLock},
+};
 
 use crate::detection::DetectionReport;
 

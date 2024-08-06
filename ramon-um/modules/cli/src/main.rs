@@ -29,7 +29,7 @@ pub struct Compile {
 pub enum SignatureCommand {
     //CompileRaw(CompileRaw),
     Compile(Compile),
-    Unpack(Unpack),
+    //Unpack(Unpack), - todo in future
     //List(List), - todo in future
 }
 
@@ -115,35 +115,6 @@ pub fn main() -> anyhow::Result<()> {
                     Err(e) => log::error!("Failed to compile sigs. Err: {e}"),
                 }
             },
-            SignatureCommand::Unpack(_args) => {
-                todo!()
-                // let sha_set = signatures::deserialize_sha_set_from_path(args.sha_set.as_str())?;
-                // if std::path::Path::new(&args.out_dir).exists() {
-                //     let md = std::fs::metadata(&args.out_dir)?;
-                //     if md.is_file() {
-                //         let info = format!("{} is a file!", &args.out_dir);
-                //         let mut cmd = Cli::command();
-                //         cmd.error(ErrorKind::ArgumentConflict, info).exit();
-                //     }
-                //
-                //     let _ = std::fs::remove_dir(&args.out_dir);
-                // }
-                //
-                // let res = std::fs::create_dir(&args.out_dir);
-                // if let Err(e) = res {
-                //     log::warn!("Failed to create dir: {}. Err: {e}", &args.out_dir);
-                // } else {
-                //     match sha_set.unpack_to_dir(&args.out_dir) {
-                //         Ok(number) => println!("SUCCESS to unpack shaset. Count: {number}"),
-                //         Err(e) => log::error!("Failed to create dir: {}. Err: {e}", &args.out_dir),
-                //     }
-                // }
-            },
-            // SignatureCommand::CompileRaw(args) => {
-            //     let sha_set = ShaSet::from_dir(args.dir.as_str())?;
-            //     let ser = sha_set.to_set_serializer();
-            //     ser.serialize(&args.out_path, ShaSet::SET_MAGIC_U32)?;
-            // },
         },
         Commands::Evaluate { sig_store_path, file_path } => {
             // if let Err(e) = scan_path::scan_path(file_path.as_str(), sig_store_path) {

@@ -1,8 +1,9 @@
-use std::{cell::RefCell, fs, io, io::SeekFrom, rc::Rc};
-use std::sync::{Arc, RwLock};
-use std::borrow::Borrow;
-use std::borrow::BorrowMut;
-use std::ops::{Deref, DerefMut};
+use std::{
+    fs, io,
+    io::SeekFrom,
+    ops::DerefMut,
+    sync::{Arc, RwLock},
+};
 
 enum Input {
     File(fs::File),

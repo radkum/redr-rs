@@ -4,6 +4,6 @@ mod file_scan_info;
 
 pub use file_abstraction::FileReader;
 pub use file_info::FileInfo;
-pub use file_scan_info::{FileScanInfo, ArcMut};
+pub use file_scan_info::{ArcMut, FileScanInfo};
 
 pub type FileReaderAndInfo = (FileReader, FileScanInfo);

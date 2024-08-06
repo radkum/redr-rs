@@ -4,11 +4,11 @@ mod handle_wrapper;
 pub mod winapi;
 
 use std::{
+    fs::File,
     io::Write,
     mem,
     ptr::{null, null_mut},
 };
-use std::fs::File;
 
 use ansi_term::{
     Colour::{Green, Red},
@@ -17,13 +17,12 @@ use ansi_term::{
 use common::{
     cleaning_info::CleaningInfo,
     constants::COMM_PORT_NAME,
-    event::{
-        get_event_type,
-        registry_set_value::RegistrySetValueEvent, Event, FileCreateEvent,
-    },
+    event::{get_event_type, registry_set_value::RegistrySetValueEvent, Event, FileCreateEvent},
     hasher::MemberHasher,
 };
+use common_um::redr;
 use console::Term;
+use scanner::{error::ScanError, Scanner};
 use signatures::sig_store::SignatureStore;
 use widestring::u16cstr;
 use windows_sys::Win32::{
@@ -32,9 +31,6 @@ use windows_sys::Win32::{
         FilterConnectCommunicationPort, FilterGetMessage, FILTER_MESSAGE_HEADER,
     },
 };
-use common_um::redr;
-use scanner::error::ScanError;
-use scanner::Scanner;
 
 use crate::{
     error_msg::{print_hr_result, print_last_error},
@@ -81,7 +77,11 @@ fn init_port(port_name: *const u16) -> Option<SmartHandle> {
         Some(connection_port)
     }
 }
-fn message_loop(connection_port: SmartHandle, sig_store: SignatureStore, sig_store2: SignatureStore) {
+fn message_loop(
+    connection_port: SmartHandle,
+    sig_store: SignatureStore,
+    sig_store2: SignatureStore,
+) {
     let _t = tokio::spawn(async move {
         // why we need to clone? there is no reason to have two instance of the same sig_store
         let scanner = Scanner::new(sig_store2);
