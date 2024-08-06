@@ -1,15 +1,19 @@
 use std::{cell::RefCell, path::PathBuf, rc::Rc};
+use std::sync::{Arc, RwLock};
+use std::borrow::Borrow;
+use std::borrow::BorrowMut;
+use std::ops::{Deref, DerefMut};
 
 use crate::detection::DetectionReport;
 
-pub type RcMut<T> = Rc<RefCell<T>>;
+pub type ArcMut<T> = Arc<RwLock<T>>;
 
 use crate::redr::FileInfo;
 
 pub enum FileScanInfo {
-    RealFile(RcMut<FileInfo>),
+    RealFile(ArcMut<FileInfo>),
     EmbeddedFile {
-        original_file: RcMut<FileInfo>,
+        original_file: ArcMut<FileInfo>,
         //original_file: FileInfo,
         name: String,
     },
@@ -19,7 +23,7 @@ impl FileScanInfo {
     pub fn get_malware_info(&self, detection_info: DetectionReport) -> String {
         match self {
             FileScanInfo::RealFile(file) => {
-                let name: String = file.borrow().name.clone();
+                let name: String = file.read().unwrap().name.clone();
                 //let path: String = file.borrow().canonical_path.clone();
 
                 format!(
@@ -29,7 +33,7 @@ impl FileScanInfo {
                 )
             },
             FileScanInfo::EmbeddedFile { original_file: file, name } => {
-                let original_name: String = file.borrow().name.clone();
+                let original_name: String = file.read().unwrap().name.clone();
                 //let path: String = file.borrow().canonical_path.clone();
 
                 //let sha256 = file.borrow().sha256.clone().unwrap_or("UNKNOWN".to_string());
@@ -43,7 +47,7 @@ impl FileScanInfo {
         }
     }
 
-    pub fn get_origin_file(&self) -> RcMut<FileInfo> {
+    pub fn get_origin_file(&self) -> ArcMut<FileInfo> {
         match self {
             FileScanInfo::RealFile(rc) => rc.clone(),
             FileScanInfo::EmbeddedFile { original_file, name: _name } => original_file.clone(),
@@ -53,7 +57,7 @@ impl FileScanInfo {
     pub fn get_name(&self) -> String {
         match self {
             FileScanInfo::RealFile(file) => {
-                let name: String = file.borrow().name.clone();
+                let name: String = file.read().unwrap().name.clone();
                 name.to_string()
             },
             FileScanInfo::EmbeddedFile { original_file: _, name } => {
@@ -65,15 +69,15 @@ impl FileScanInfo {
 
     pub fn set_sha(&mut self, sha: String) {
         if let FileScanInfo::RealFile(rc) = self {
-            rc.borrow_mut().sha256 = Some(sha);
+            rc.write().unwrap().sha256 = Some(sha);
         }
     }
 
     pub fn real_file(path: PathBuf) -> Self {
-        Self::RealFile(Rc::new(RefCell::new(FileInfo::new(path))))
+        Self::RealFile(Arc::new(RwLock::new(FileInfo::new(path))))
     }
 
-    pub fn embedded_file(original_file: RcMut<FileInfo>, name: &str) -> Self {
+    pub fn embedded_file(original_file: ArcMut<FileInfo>, name: &str) -> Self {
         Self::EmbeddedFile { original_file, name: name.to_string() }
     }
 }

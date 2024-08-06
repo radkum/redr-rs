@@ -1,6 +1,6 @@
 use std::{collections::VecDeque, io::Read};
 
-use common_um::{redr, redr::RcMut};
+use common_um::{redr, redr::ArcMut};
 use shared_arcom::{ExtractError, FileExtractor};
 
 pub struct ZipExtractor {}
@@ -9,7 +9,7 @@ impl FileExtractor for ZipExtractor {
     fn extract_files(
         &self,
         file: redr::FileReader,
-        original_file: RcMut<redr::FileInfo>,
+        original_file: ArcMut<redr::FileInfo>,
         queue: &mut VecDeque<redr::FileReaderAndInfo>,
     ) -> Result<(), ExtractError> {
         let mut archive = zip::ZipArchive::new(file).unwrap();

@@ -30,6 +30,10 @@ impl FileCreateEvent {
     pub fn new(path: String) -> Self {
         Self { path }
     }
+
+    pub fn get_path(&self) -> String {
+        self.path.clone()
+    }
 }
 impl Event for FileCreateEvent {
     //"CRE " as u32-> 43 52 45 20

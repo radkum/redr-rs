@@ -1,6 +1,7 @@
 use std::{collections::VecDeque, fs::File, path::Path};
 
 use common_um::redr;
+use scanner::{Scanner, user_mode_async_scan_files};
 
 pub(super) fn scan_path(target_path: &str, store_path: String) -> anyhow::Result<()> {
     log::debug!("scan_path: {}", target_path);
@@ -11,10 +12,25 @@ pub(super) fn scan_path(target_path: &str, store_path: String) -> anyhow::Result
 
     create_file_queue(path, &mut queue)?;
 
-    scanner::scan_files(&mut queue, sig_store)?;
+    scanner::simple_scan_files(&mut queue, sig_store)?;
 
     Ok(())
 }
+
+pub(super) fn async_scan_path(target_path: &str, store_path: String) -> anyhow::Result<()> {
+    log::debug!("scan_path: {}", target_path);
+    let sig_store = signatures::deserialize_sig_store_from_path(store_path.as_str())?;
+
+    let path = std::path::Path::new(target_path);
+    let mut queue = VecDeque::new();
+
+    create_file_queue(path, &mut queue)?;
+
+    user_mode_async_scan_files(sig_store, queue);
+
+    Ok(())
+}
+
 
 fn create_file_queue(
     path: &Path,

@@ -10,7 +10,8 @@ arcom = { path = "../arcom"}
 common-um = { path = "../common-um" }
 signatures = { path = "../signatures" }
 
+ansi_term = "~0"
 log = "~0"
 sha2 = "~0"
 thiserror = "~1"
-ansi_term = "~0"
+tokio = { version = "~1", features = ["full"] }

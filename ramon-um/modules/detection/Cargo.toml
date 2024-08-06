@@ -7,9 +7,10 @@ edition = "2021"
 
 [dependencies]
 common-um = { path = "../common-um" }
-signatures = { path = "../signatures" }
 common = { path = "../../../common"}
 cleaner = { path = "../cleaner" }
+scanner = { path = "../scanner" }
+signatures = { path = "../signatures" }
 
 console = "~0"
 downcast-rs = "1.2.1"

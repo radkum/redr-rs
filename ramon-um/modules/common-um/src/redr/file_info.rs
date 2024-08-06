@@ -11,6 +11,9 @@ pub struct FileInfo {
     pub sha256: Option<String>,
 }
 
+unsafe impl Send for FileInfo {}
+unsafe impl Sync for FileInfo {}
+
 impl FileInfo {
     pub fn new(path: PathBuf) -> Self {
         let name: String = path.file_name().unwrap_or_default().to_string_lossy().into();

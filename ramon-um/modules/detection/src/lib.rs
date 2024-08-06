@@ -8,6 +8,7 @@ use std::{
     mem,
     ptr::{null, null_mut},
 };
+use std::fs::File;
 
 use ansi_term::{
     Colour::{Green, Red},
@@ -17,7 +18,7 @@ use common::{
     cleaning_info::CleaningInfo,
     constants::COMM_PORT_NAME,
     event::{
-        get_event_type, image_load::ImageLoadEvent, process_create::ProcessCreateEvent,
+        get_event_type,
         registry_set_value::RegistrySetValueEvent, Event, FileCreateEvent,
     },
     hasher::MemberHasher,
@@ -31,6 +32,9 @@ use windows_sys::Win32::{
         FilterConnectCommunicationPort, FilterGetMessage, FILTER_MESSAGE_HEADER,
     },
 };
+use common_um::redr;
+use scanner::error::ScanError;
+use scanner::Scanner;
 
 use crate::{
     error_msg::{print_hr_result, print_last_error},
@@ -39,7 +43,7 @@ use crate::{
 };
 
 #[tokio::main]
-pub async fn start_detection(signatures: SignatureStore) {
+pub async fn start_detection(signatures: SignatureStore, signatures2: SignatureStore) {
     //todo: check signatures
     let port_name = u16cstr!(COMM_PORT_NAME).as_ptr();
     let Some(connection_port) = init_port(port_name) else {
@@ -49,7 +53,7 @@ pub async fn start_detection(signatures: SignatureStore) {
     let _ = ansi_term::enable_ansi_support();
     println!("{} Client connected to driver", Green.paint("SUCCESS!"));
 
-    message_loop(connection_port, signatures);
+    message_loop(connection_port, signatures, signatures2);
 
     //CloseHandle(h_connection_port); ??
 }
@@ -77,8 +81,11 @@ fn init_port(port_name: *const u16) -> Option<SmartHandle> {
         Some(connection_port)
     }
 }
-fn message_loop(connection_port: SmartHandle, sig_store: SignatureStore) {
+fn message_loop(connection_port: SmartHandle, sig_store: SignatureStore, sig_store2: SignatureStore) {
     let _t = tokio::spawn(async move {
+        // why we need to clone? there is no reason to have two instance of the same sig_store
+        let scanner = Scanner::new(sig_store2);
+
         let msg_header = mem::size_of::<FILTER_MESSAGE_HEADER>();
 
         // In a loop, read data from the socket and write the data back.
@@ -103,7 +110,12 @@ fn message_loop(connection_port: SmartHandle, sig_store: SignatureStore) {
             let event_buff = &buff[msg_header..];
             let e = get_event_type(event_buff);
 
-            if e == FileCreateEvent::EVENT_CLASS {}
+            if e == FileCreateEvent::EVENT_CLASS {
+                let file_create_event = FileCreateEvent::deserialize(event_buff).unwrap();
+                let path = file_create_event.get_path();
+                let file_info = create_file_reader_and_info(path);
+                scanner.process_file(file_info.unwrap()).await.unwrap();
+            }
 
             let detection_report = match e {
                 // ProcessCreateEvent::EVENT_CLASS => {
@@ -158,6 +170,11 @@ fn message_loop(connection_port: SmartHandle, sig_store: SignatureStore) {
     }
 }
 
+fn create_file_reader_and_info(path: String) -> Result<redr::FileReaderAndInfo, ScanError> {
+    let file = File::open(path.clone())?;
+    let file_info = redr::FileScanInfo::real_file(path.into());
+    Ok((redr::FileReader::from_file(file), file_info))
+}
 // async fn process_event(hashes: Vec<[u8; 32]>, signatures: &BedetSet) {
 //     println!(
 //         "{}",

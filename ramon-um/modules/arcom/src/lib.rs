@@ -3,7 +3,7 @@ use std::{
     io::{self, Seek, SeekFrom},
 };
 
-use common_um::{redr, redr::RcMut};
+use common_um::{redr, redr::ArcMut};
 use shared_arcom::ExtractError;
 pub use shared_arcom::FileExtractor;
 lazy_static::lazy_static! {
@@ -67,7 +67,7 @@ impl ArchiveType {
 
 pub fn unpack_file(
     mut file: redr::FileReader,
-    original_file: RcMut<redr::FileInfo>,
+    original_file: ArcMut<redr::FileInfo>,
     queue: &mut VecDeque<redr::FileReaderAndInfo>,
 ) -> Result<(), ExtractError> {
     let file_type = ArchiveType::get_file_type(&mut file);

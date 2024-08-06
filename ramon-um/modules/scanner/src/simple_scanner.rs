@@ -11,7 +11,7 @@ use crate::error::ScanError;
 
 const MAX_FILE_TO_SCAN: usize = 0x100;
 
-pub fn scan_files(
+pub fn simple_scan_files(
     files_queue: &mut VecDeque<redr::FileReaderAndInfo>,
     signature_store: SignatureStore,
 ) -> Result<(), ScanError> {

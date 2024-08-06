@@ -1,17 +1,24 @@
 use std::{cell::RefCell, fs, io, io::SeekFrom, rc::Rc};
+use std::sync::{Arc, RwLock};
+use std::borrow::Borrow;
+use std::borrow::BorrowMut;
+use std::ops::{Deref, DerefMut};
 
 enum Input {
     File(fs::File),
-    //ZipFile(zip::read::ZipFile)
     Buff(io::Cursor<Vec<u8>>),
 }
+
+unsafe impl Send for Input {}
+unsafe impl Sync for Input {}
+
 pub struct FileReader {
-    input: Rc<RefCell<Input>>,
+    input: Arc<RwLock<Input>>,
 }
 
 impl FileReader {
     pub fn from_file(file: std::fs::File) -> Self {
-        Self { input: Rc::new(RefCell::new(Input::File(file))) }
+        Self { input: Arc::new(RwLock::new(Input::File(file))) }
     }
 
     // pub fn from_zip_file(file: zip::read::ZipFile) -> Self {
@@ -19,14 +26,14 @@ impl FileReader {
     // }
 
     pub fn from_buff(buff: io::Cursor<Vec<u8>>) -> Self {
-        Self { input: Rc::new(RefCell::new(Input::Buff(buff))) }
+        Self { input: Arc::new(RwLock::new(Input::Buff(buff))) }
     }
 }
 
 impl io::Read for FileReader {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-        let mut reader = self.input.borrow_mut();
-        match &mut *reader {
+        let mut reader = self.input.write().unwrap();
+        match reader.deref_mut() {
             Input::File(file) => file.read(buf),
             Input::Buff(cursor) => cursor.read(buf),
         }
@@ -35,8 +42,8 @@ impl io::Read for FileReader {
 
 impl io::Seek for FileReader {
     fn seek(&mut self, pos: SeekFrom) -> io::Result<u64> {
-        let mut reader = self.input.borrow_mut();
-        match &mut *reader {
+        let mut reader = self.input.write().unwrap();
+        match reader.deref_mut() {
             Input::File(file) => file.seek(pos),
             Input::Buff(cursor) => cursor.seek(pos),
         }

@@ -1,6 +1,6 @@
 use std::{collections::VecDeque, io::Read};
 
-use common_um::{redr, redr::RcMut};
+use common_um::{redr, redr::ArcMut};
 use shared_arcom::{ExtractError, FileExtractor};
 
 pub struct OleExtractor {}
@@ -9,7 +9,7 @@ impl FileExtractor for OleExtractor {
     fn extract_files(
         &self,
         file: redr::FileReader,
-        original_file: RcMut<redr::FileInfo>,
+        original_file: ArcMut<redr::FileInfo>,
         queue: &mut VecDeque<redr::FileReaderAndInfo>,
     ) -> Result<(), ExtractError> {
         let parser = ole::Reader::new(file)?;
