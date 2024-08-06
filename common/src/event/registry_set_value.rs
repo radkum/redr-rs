@@ -7,6 +7,8 @@ use crate::{
 use alloc::{collections::TryReserveError, string::String, vec::Vec};
 use core::mem;
 use serde::{Deserialize, Serialize};
+use crate::cleaning_info::CleaningInfo;
+use crate::enums::RegType;
 
 #[derive(Debug)]
 pub struct RegistrySetValueEvent {
@@ -61,52 +63,10 @@ impl RegistrySetValueEvent {
         }
     }
 
-    #[inline]
-    pub fn get_pid(&self) -> u32 {
-        self.pid
-    }
-
-    // pub fn data_as_string(&self) -> String {
-    //     if self.data_type == 1 || self.data_type == 2 || self.data_type == 7 {
-    //         if let Ok(data) = String::from_utf8(self.data.clone()) {
-    //             return format!(
-    //                 "RegistrySetValueEvent {{ pid: {}, tid: {}, key_name: {}, value_name: {}, \
-    //                  data_type: {}, data: {} }}",
-    //                 self.pid, self.tid, self.key_name, self.value_name, self.data_type, data
-    //             );
-    //         }
-    //     }
-    //     format!("{:?}", self)
-    // }
-    //
-    // pub fn data_as_string2(&self) -> Option<String> {
-    //     if self.data_type == 1 || self.data_type == 2 || self.data_type == 7 {
-    //         let data = self.data.clone();
-    //
-    //         let data_u16: &[u16] =
-    //             unsafe { core::slice::from_raw_parts(data.as_ptr() as *const u16, data.len() / 2) };
-    //
-    //         let mut s = String::new();
-    //         s.reserve(data_u16.len());
-    //         for e in data_u16 {
-    //             if *e == 0 {
-    //                 break;
-    //             }
-    //             s.push(*e as u8 as char);
-    //         }
-    //
-    //         return Some(format!(
-    //             "RegistrySetValueEvent {{ pid: {}, tid: {}, key_name: {}, value_name: {}, \
-    //              data_type: {}, data: {} }}",
-    //             self.pid, self.tid, self.key_name, self.value_name, self.data_type, s
-    //         ));
-    //     }
-    //     None
-    // }
-
-    pub fn data_as_string3(&self) -> Option<String> {
+    pub fn data_as_string(&self) -> Option<String> {
         //todo: support more types
-        if self.data_type == 1 || self.data_type == 2 || self.data_type == 7 {
+        let data_type = RegType::from(self.data_type);
+        if !data_type.is_string() {
             return None;
         }
 
@@ -122,6 +82,26 @@ impl RegistrySetValueEvent {
                 break;
             }
             s.push(*e as u8 as char);
+        }
+        Some(s)
+    }
+
+    pub fn data_as_string2(&self) -> Option<String> {
+        //todo: support more types
+        let data_type = RegType::from(self.data_type);
+        if !data_type.is_string() {
+            return None;
+        }
+
+        let data = self.data.clone();
+
+        let mut s = String::new();
+        s.reserve(data.len());
+        for e in data {
+            if e == 0 {
+                break;
+            }
+            s.push(e as char);
         }
         Some(s)
     }
@@ -220,13 +200,20 @@ impl MemberHasher for RegistrySetValueEvent {
         }
 
         //todo: parse not only strings
-        if let Some(data) = self.data_as_string3() {
+        if let Some(data) = self.data_as_string() {
+            log::debug!("data_as_string: {}", &data);
             if !data.is_empty() {
                 let data = member_to_hash(Self::EVENT_NAME, "data", data.clone());
                 v.push(data);
             }
         }
         v
+    }
+}
+
+impl CleaningInfo for RegistrySetValueEvent {
+    fn get_pid(&self) -> u32 {
+        self.pid
     }
 }
 

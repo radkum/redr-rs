@@ -58,7 +58,7 @@ pub unsafe extern "system" fn DriverEntry(
     driver: &mut DRIVER_OBJECT,
     _path: *const UNICODE_STRING,
 ) -> NTSTATUS {
-    KernelLogger::init(LevelFilter::Info).expect("Failed to initialize logger");
+    KernelLogger::init(LevelFilter::Warn).expect("Failed to initialize logger");
 
     log::info!("START Ramon");
 

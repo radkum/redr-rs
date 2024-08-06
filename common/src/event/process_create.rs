@@ -6,6 +6,7 @@ use crate::{
 use alloc::{collections::TryReserveError, format, string::String, vec::Vec};
 use core::mem;
 use serde::{Deserialize, Serialize};
+use crate::cleaning_info::CleaningInfo;
 
 #[derive(Debug)]
 pub struct ProcessCreateEvent {
@@ -103,6 +104,12 @@ impl MemberHasher for ProcessCreateEvent {
         }
 
         v
+    }
+}
+
+impl CleaningInfo for ProcessCreateEvent {
+    fn get_pid(&self) -> u32 {
+        self.pid
     }
 }
 

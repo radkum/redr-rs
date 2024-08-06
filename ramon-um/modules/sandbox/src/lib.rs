@@ -4,7 +4,7 @@ mod sandbox;
 use std::{collections::BTreeSet, io::ErrorKind};
 
 use ansi_term::Colour::{Green, Red};
-use common::utils::{convert_sha256_to_string, sha256_from_string};
+use common::utils::sha256_from_string;
 
 use crate::{error::SandboxError, sandbox::perform_sandboxing};
 
@@ -21,8 +21,8 @@ pub fn sandbox_file(file_path: &str, store_path: &str) -> Result<(), SandboxErro
     //todo: remove unwrap
     let sha_vec: Vec<_> = calls.into_iter().map(|s| sha256_from_string(s)).collect();
 
-    let v: Vec<_> = sha_vec.clone().into_iter().map(|s| convert_sha256_to_string(&s)).collect();
-    println!("{v:?}");
+    //let v: Vec<_> = sha_vec.clone().into_iter().map(|s| convert_sha256_to_string(&s)).collect();
+    //println!("{v:?}");
 
     if let Some(detection_info) = sig_store.eval_sandboxed_file(sha_vec)? {
         //todo: do some action with detection info

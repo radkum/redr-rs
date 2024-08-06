@@ -1,6 +1,7 @@
 [env]
+CARGO_MAKE_EXTEND_WORKSPACE_MAKEFILE = true
 EXE_NAME = "ramon-client"
-OUTPUT_PATH = "..\\output"
+OUTPUT_PATH = "%CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY%\\output"
 
 [env.development]
 TARGET_PATH = "target\\debug"
@@ -14,10 +15,6 @@ command = "cargo"
 args = ["fmt"]
 toolchain = "nightly"
 
-[tasks.echo]
-command = "echo"
-args = ["current member: ${CARGO_MAKE_CRATE_CURRENT_WORKSPACE_MEMBER}"]
-
 [tasks.build-client]
 dependencies = []
 script = [
@@ -27,7 +24,7 @@ script = [
 [tasks.copy]
 script = [
     "IF not exist %OUTPUT_PATH% (mkdir %OUTPUT_PATH%)",
-    "COPY %TARGET_PATH%\\%EXE_NAME%.exe %OUTPUT_PATH%",
+    "COPY %CARGO_MAKE_CRATE_TARGET_DIRECTORY%\\debug\\%EXE_NAME%.exe %CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY%\\..\\output\\",
 ]
 
 [tasks.all]

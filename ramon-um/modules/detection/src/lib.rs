@@ -14,6 +14,8 @@ use ansi_term::{
     Style,
 };
 use common::{
+    cleaning_info::CleaningInfo,
+    constants::COMM_PORT_NAME,
     event::{
         get_event_type, image_load::ImageLoadEvent, process_create::ProcessCreateEvent,
         registry_set_value::RegistrySetValueEvent, Event, FileCreateEvent,
@@ -22,7 +24,7 @@ use common::{
 };
 use console::Term;
 use signatures::sig_store::SignatureStore;
-use widestring::u16str;
+use widestring::u16cstr;
 use windows_sys::Win32::{
     Foundation::STATUS_SUCCESS,
     Storage::InstallableFileSystems::{
@@ -36,15 +38,10 @@ use crate::{
     winapi::output_debug_string,
 };
 
-const COMM_PORT_NAME: &str = "\\BEDET.KM2UM.Port\0";
-//const COMM_PORT_NAME: &str = "\\RAMON.KM2UM.Port\0";
-type PISIZE = *mut isize;
-
 #[tokio::main]
 pub async fn start_detection(signatures: SignatureStore) {
     //todo: check signatures
-
-    let port_name = u16str!(COMM_PORT_NAME).as_ptr();
+    let port_name = u16cstr!(COMM_PORT_NAME).as_ptr();
     let Some(connection_port) = init_port(port_name) else {
         return;
     };
@@ -67,7 +64,7 @@ fn init_port(port_name: *const u16) -> Option<SmartHandle> {
             null(),
             0,
             null_mut(),
-            connection_port.as_mut_ref() as PISIZE,
+            connection_port.as_mut_ref() as *mut isize,
         )
     };
 
@@ -105,53 +102,48 @@ fn message_loop(connection_port: SmartHandle, sig_store: SignatureStore) {
 
             let event_buff = &buff[msg_header..];
             let e = get_event_type(event_buff);
-            match e {
-                ProcessCreateEvent::EVENT_CLASS => {
-                    //println!("{:?}", ProcessCreateEvent::deserialize(event_buff))
-                },
-                ImageLoadEvent::EVENT_CLASS => {
-                    //println!("{:?}", ImageLoadEvent::deserialize(event_buff))
-                },
-                RegistrySetValueEvent::EVENT_CLASS => {
-                    if let Some(e) = RegistrySetValueEvent::deserialize(event_buff) {
-                        if let Ok(Some(s)) = sig_store.eval_vec(e.hash_members()) {
-                            let detection = format!("{}", s);
-                            println!(
-                                "{} - {}",
-                                Red.paint("MALWARE"),
-                                Style::new().bold().paint(&detection)
-                            );
-                            output_debug_string(detection);
-                            if cleaner::process_cleaner::try_to_kill_process(e.get_pid()) {
-                                println!(
-                                    "{} Process terminated. Pid: {}",
-                                    Green.paint("SUCCESS!"),
-                                    e.get_pid()
-                                );
-                                output_debug_string(format!(
-                                    "Success to terminate process. Pid: {}",
-                                    e.get_pid()
-                                ));
-                            } else {
-                                output_debug_string(format!(
-                                    "Failed to terminate process. Pid: {}",
-                                    e.get_pid()
-                                ));
-                            }
-                        }
 
-                        let _ = std::io::stdout().flush();
-                        // tokio::spawn(async move {
-                        //     process_event(e.hash_members(), signatures).await;
-                        // });
-                    }
+            if e == FileCreateEvent::EVENT_CLASS {}
+
+            let detection_report = match e {
+                // ProcessCreateEvent::EVENT_CLASS => {
+                //     //println!("{:?}", ProcessCreateEvent::deserialize(event_buff))
+                //     ProcessCreateEvent::deserialize(event_buff).map(|e| sig_store.eval_vec(e.hash_members()))
+                // },
+                // ImageLoadEvent::EVENT_CLASS => {
+                //     //println!("{:?}", ImageLoadEvent::deserialize(event_buff))
+                //     ImageLoadEvent::deserialize(event_buff).map(|e| sig_store.eval_vec(e.hash_members()))
+                // },
+                RegistrySetValueEvent::EVENT_CLASS => {
+                    let event = RegistrySetValueEvent::deserialize(event_buff);
+                    event.map(|e| (e.get_pid(), sig_store.eval_vec(e.hash_members()).unwrap()))
                 },
-                FileCreateEvent::EVENT_CLASS => {
-                    //println!("{:?}", FileCreateEvent::deserialize(event_buff))
+                _ => {
+                    todo!()
                 },
-                _ => {},
+            };
+
+            if let None = detection_report {
+                continue;
             }
-            //println!("{}", String::from_utf8(e.to_blob().unwrap()).unwrap());
+            let (pid, detection_report) = detection_report.unwrap();
+
+            if let Some(detection_report) = detection_report {
+                let detection = format!("{}", detection_report);
+                println!("{} - {}", Red.paint("MALWARE"), Style::new().bold().paint(&detection));
+                output_debug_string(detection);
+                if cleaner::process_cleaner::try_to_kill_process(pid) {
+                    println!("{} Process terminated. Pid: {}", Green.paint("SUCCESS!"), pid);
+                    output_debug_string(format!("Success to terminate process. Pid: {}", pid));
+                } else {
+                    output_debug_string(format!("Failed to terminate process. Pid: {}", pid));
+                }
+            }
+
+            let _ = std::io::stdout().flush();
+            // tokio::spawn(async move {
+            //     process_event(e.hash_members(), signatures).await;
+            // });
         }
     });
 

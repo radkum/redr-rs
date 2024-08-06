@@ -24,7 +24,7 @@ pub struct HeurSet {
     imports_in_sig: Vec<ImportInSigs>,
     sig_id_to_description: HashMap<SigId, Description>,
     sig_id_to_name: HashMap<SigId, SigName>,
-    sig_id_to_imports: HashMap<SigId, Vec<Sha256Buff>>,
+    sig_id_to_hash: HashMap<SigId, Vec<Sha256Buff>>,
 }
 
 impl HeurSet {
@@ -68,16 +68,16 @@ impl HeurSet {
         // for im in self.imports_in_sig.iter() {
         //     println!("{:08b}", im);
         // }
-        for a in sha_vec.iter() {
-            println!("{}", convert_sha256_to_string(a));
-        }
-        println!("\n");
+        // for a in sha_vec.iter() {
+        //     println!("{}", convert_sha256_to_string(a));
+        // }
+        // println!("\n");
+        //
+        // for (a, _) in self.import_sha_to_import_index.iter() {
+        //     println!("{}", convert_sha256_to_string(a));
+        // }
 
-        for (a, _) in self.import_sha_to_import_index.iter() {
-            println!("{}", convert_sha256_to_string(a));
-        }
-
-        let sig_count = self.sig_id_to_imports.len();
+        let sig_count = self.sig_id_to_hash.len();
         log::trace!("{:?}", self.imports_in_sig);
         let mut imports_in_sig = self.imports_in_sig.clone();
         for sha256 in sha_vec {
@@ -125,7 +125,8 @@ impl HeurSet {
         let sig = Signature::new_heur(
             self.sig_id_to_name[&matched_sig].clone(),
             self.sig_id_to_description[&matched_sig].clone(),
-            self.sig_id_to_imports[&matched_sig].clone(),
+            self.sig_id_to_hash[&matched_sig].clone(),
+            self.magic,
         );
         return Ok(Some(sig));
     }
@@ -182,7 +183,12 @@ impl SigSetTrait for HeurSet {
         //      2   |0 1 0 0 0 0 0 0
         //      3   |0 0 1 0 0 0 0 0
 
-        self.sig_id_to_imports.insert(sig_id, imports.clone());
+        log::debug!(
+            "{:?}",
+            imports.iter().map(|i| convert_sha256_to_string(i)).collect::<Vec<_>>()
+        );
+
+        self.sig_id_to_hash.insert(sig_id, imports.clone());
 
         for import_sha in imports {
             let import_mask = 1 << sig_id; //it give as a byte number
@@ -245,17 +251,17 @@ impl SigSetTrait for HeurSet {
             imports_in_sig: vec![],
             sig_id_to_description: Default::default(),
             sig_id_to_name: Default::default(),
-            sig_id_to_imports: Default::default(),
+            sig_id_to_hash: Default::default(),
         }
     }
 
     fn to_set_serializer(&self) -> SigSetSerializer {
         let mut ser = SigSetSerializer::new(self.magic);
-        for (sig_id, imports) in self.sig_id_to_imports.iter() {
+        for (sig_id, imports) in self.sig_id_to_hash.iter() {
             let desc = self.sig_id_to_description[&sig_id].clone();
             let name = self.sig_id_to_name[&sig_id].clone();
 
-            let sig = Signature::new_heur(name, desc, imports.clone());
+            let sig = Signature::new_heur(name, desc, imports.clone(), self.magic);
             let serialized_data = bincode::serde::encode_to_vec(sig, BIN_CONFIG).unwrap();
 
             ser.serialize_signature(*sig_id, serialized_data);

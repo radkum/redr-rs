@@ -8,12 +8,13 @@ pub mod registry_set_value;
 
 use crate::{deserializer::Deserializer, hasher::MemberHasher, serializer::Serializer};
 pub use file_create::FileCreateEvent;
+use crate::cleaning_info::CleaningInfo;
 
 pub fn get_event_type(bytes: &[u8]) -> u32 {
     u32::from_blob(bytes)
 }
 
-pub trait Event: Serializer + Deserializer + MemberHasher {
+pub trait Event: Serializer + Deserializer + MemberHasher + CleaningInfo {
     const EVENT_CLASS: u32;
 
     fn blob_with_header_size(&self) -> usize {

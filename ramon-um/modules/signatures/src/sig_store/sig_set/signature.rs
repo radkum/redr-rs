@@ -11,7 +11,10 @@ use serde::{Deserialize, Serialize};
 pub(super) use yaml_signature::{YamlSigData, YamlSignature};
 
 use super::{Description, SigName};
-use crate::{sig_store::sig_set::signature::yaml_signature::EventData, SigSetError};
+use crate::{
+    sig_store::sig_set::{heuristic_set::HeurSet, signature::yaml_signature::EventData},
+    SigSetError,
+};
 
 pub(crate) mod yaml_signature;
 pub(crate) type SigId = u32;
@@ -48,8 +51,20 @@ impl Signature {
         name: SigName,
         description: Description,
         imports: Vec<Sha256Buff>,
+        sig_type: u32,
     ) -> Signature {
-        Self { base: SigBase { name, description }, data: SigData::Imports(imports) }
+        match sig_type {
+            HeurSet::HEUR_MAGIC_U32 => {
+                Self { base: SigBase { name, description }, data: SigData::Imports(imports) }
+            },
+            HeurSet::DYN_MAGIC_U32 => {
+                Self { base: SigBase { name, description }, data: SigData::Calls(imports) }
+            },
+            HeurSet::BEH_MAGIC_U32 => {
+                Self { base: SigBase { name, description }, data: SigData::Event(imports) }
+            },
+            _ => unreachable!("There is no other sig type"),
+        }
     }
 
     pub(crate) fn new_sha(name: SigName, description: Description, sha: Sha256Buff) -> Signature {

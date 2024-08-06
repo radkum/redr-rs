@@ -20,11 +20,11 @@ use winapi::{
     um::winnt::PSECURITY_DESCRIPTOR,
 };
 
+use common::constants::COMM_PORT_NAME;
+use common::constants::FLT_PORT_ALL_ACCESS;
+
 use crate::alloc::string::ToString;
 
-const COMM_PORT_NAME: &str = "\\RAMON.KM2UM.Port";
-
-const FLT_PORT_ALL_ACCESS: u32 = 0x001F0001 as u32;
 pub(crate) type PMINIFILTER = *mut Minifilter;
 pub(crate) static mut S_MINIFILTER: Option<Box<Minifilter>> = None;
 static mut INSTANCE_NUMBER: usize = 0;

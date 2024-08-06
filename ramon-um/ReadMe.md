@@ -11,6 +11,7 @@ TODO Description
 
 ##### OTHER
 ###### cargo run -- signature compile  --dir signatures -o malset.sset
+###### cargo run -- -lllll signature compile  --dir signatures -o malset.sset
 ###### cargo run -- evaluate -s .\malset.sset ..\malset\Watacat\
 ###### cargo run -- sandbox -s .\malset.sset ..\malset\Watacat\Wacatac_behavioral_detection.exe
 ###### cargo run -- start-detection -s .\malset.sset
