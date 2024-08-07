@@ -6,7 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-arcom = { path = "../arcom"}
+arcom = { path = "../arcom" }
+cleaner = { path = "../cleaner" }
 common-um = { path = "../common-um" }
 signatures = { path = "../signatures" }
 

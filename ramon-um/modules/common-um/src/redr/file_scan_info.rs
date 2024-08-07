@@ -3,11 +3,11 @@ use std::{
     sync::{Arc, RwLock},
 };
 
-use crate::detection::DetectionReport;
+use crate::detection_report::DetectionReport;
 
 pub type ArcMut<T> = Arc<RwLock<T>>;
 
-use crate::redr::FileInfo;
+use crate::redr::{malware_info::MalwareInfo, FileInfo};
 
 pub enum FileScanInfo {
     RealFile(ArcMut<FileInfo>),
@@ -19,8 +19,8 @@ pub enum FileScanInfo {
 }
 
 impl FileScanInfo {
-    pub fn get_malware_info(&self, detection_info: DetectionReport) -> String {
-        match self {
+    pub fn get_malware_info(&self, detection_info: DetectionReport) -> MalwareInfo {
+        MalwareInfo(match self {
             FileScanInfo::RealFile(file) => {
                 let name: String = file.read().unwrap().name.clone();
                 //let path: String = file.borrow().canonical_path.clone();
@@ -43,7 +43,7 @@ impl FileScanInfo {
                 );
                 format!("\"{original_name}\" -> Malicious {{ cause: {cause} }}")
             },
-        }
+        })
     }
 
     pub fn get_origin_file(&self) -> ArcMut<FileInfo> {
@@ -62,6 +62,15 @@ impl FileScanInfo {
             FileScanInfo::EmbeddedFile { original_file: _, name } => {
                 //let original_name: String = file.borrow().name.clone();
                 name.to_string()
+            },
+        }
+    }
+
+    pub fn get_path(&self) -> PathBuf {
+        match self {
+            FileScanInfo::RealFile(file)
+            | FileScanInfo::EmbeddedFile { original_file: file, name: _ } => {
+                file.read().unwrap().path.clone()
             },
         }
     }

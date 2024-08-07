@@ -5,7 +5,8 @@ use crate::{
 };
 use alloc::{collections::TryReserveError, format, string::String, vec::Vec};
 use serde::{Deserialize, Serialize};
-use crate::cleaning_info::CleaningInfo;
+use crate::cleaning_info::CleaningInfoTrait;
+use crate::event::Pid;
 
 #[derive(Debug)]
 pub struct FileCreateEvent {
@@ -72,8 +73,8 @@ impl MemberHasher for FileCreateEvent {
     }
 }
 
-impl CleaningInfo for FileCreateEvent {
-    fn get_pid(&self) -> u32 {
+impl CleaningInfoTrait for FileCreateEvent {
+    fn get_pid(&self) -> Pid {
         todo!()
     }
 }

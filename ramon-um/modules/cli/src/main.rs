@@ -120,7 +120,6 @@ pub fn main() -> anyhow::Result<()> {
             // if let Err(e) = scan_path::scan_path(file_path.as_str(), sig_store_path) {
             //     println!("{} Cause: {e}", Red.paint("ERROR!"))
             // }
-
             if let Err(e) = scan_path::async_scan_path(file_path.as_str(), sig_store_path) {
                 println!("{} Cause: {e}", Red.paint("ERROR!"))
             }

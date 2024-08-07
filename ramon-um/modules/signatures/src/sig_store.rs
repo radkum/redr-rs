@@ -3,7 +3,7 @@ use std::{
     mem::size_of,
 };
 
-use common_um::{detection::DetectionReport, redr, sha256_utils::Sha256Buff};
+use common_um::{detection_report::DetectionReport, redr, sha256_utils::Sha256Buff};
 use serde::{Deserialize, Serialize};
 
 pub mod sig_set;

@@ -1,4 +1,6 @@
-use ansi_term::Colour::Red;
+use std::sync::Arc;
+
+use ansi_term::{Colour::Red, Style};
 use common_um::redr;
 use tokio::{
     sync::{
@@ -15,7 +17,7 @@ pub use ramon_event::RamonEvent;
 use scan_report::ScanReport;
 use signatures::sig_store::SignatureStore;
 
-use crate::error::ScanError;
+use crate::{error::ScanError, scan_one_file::scan_one_file, scan_result::ScanResult};
 
 pub struct Scanner {
     sender: Sender<RamonEvent>,
@@ -27,7 +29,7 @@ impl Scanner {
 
     // to reconsider
 
-    pub fn new(signature_store: SignatureStore) -> Self {
+    pub fn new(signature_store: Arc<SignatureStore>) -> Self {
         let (tx, rx) = mpsc::channel::<RamonEvent>(Self::MAX_FILE_IN_QUEUE);
 
         let mut scanner = Self { sender: tx, join_handle: None };
@@ -40,38 +42,30 @@ impl Scanner {
         scanner
     }
 
-    fn run(&mut self, mut receiver: Receiver<RamonEvent>, signature_store: SignatureStore) {
+    fn run(&mut self, mut receiver: Receiver<RamonEvent>, signature_store: Arc<SignatureStore>) {
+        let _ = ansi_term::enable_ansi_support();
+
         let handle = tokio::spawn(async move {
-            let mut report = ScanReport::default();
+            let report = ScanReport::default();
 
             // messages are received till to TxAction::Close message. Then task return wallet
             while let Some(event) = receiver.recv().await {
                 match event {
                     RamonEvent::CreateFile(file_info) => {
-                        let (mut reader, file_scan_info) = file_info;
-
-                        let file_name = file_scan_info.get_name();
+                        let file_name = file_info.1.get_name();
                         log::debug!("Start scanning '{}' file", file_name.as_str());
 
-                        let scan_result = match signature_store.eval_file(&mut reader) {
-                            Ok(report) => report,
-                            Err(err) => {
-                                log::error!("{:?}", err);
-                                continue;
+                        match scan_one_file(file_info, signature_store.clone()) {
+                            Ok(res) => {
+                                if let ScanResult::Malicious(info, _) = res {
+                                    println!(
+                                        "{} - {}",
+                                        Red.paint("MALWARE"),
+                                        Style::new().bold().paint(info.into_string())
+                                    );
+                                }
                             },
-                        };
-
-                        if let Some(detection_info) = scan_result {
-                            //todo: do some action with detection info
-                            println!(
-                                "{} - {}",
-                                Red.paint("MALICIOUS"),
-                                file_scan_info.get_malware_info(detection_info)
-                            );
-
-                            report.push_malicious(file_name.clone())
-                        } else {
-                            report.push_clean(file_name.clone())
+                            Err(err) => log::error!("{:?}", err),
                         }
                     },
                     RamonEvent::Close => receiver.close(),

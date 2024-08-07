@@ -6,7 +6,8 @@ use crate::{
 use alloc::{collections::TryReserveError, format, string::String, vec::Vec};
 use core::mem;
 use serde::{Deserialize, Serialize};
-use crate::cleaning_info::CleaningInfo;
+use crate::cleaning_info::CleaningInfoTrait;
+use crate::event::Pid;
 
 #[derive(Debug)]
 pub struct ImageLoadEvent {
@@ -123,9 +124,9 @@ impl MemberHasher for ImageLoadEvent {
     }
 }
 
-impl CleaningInfo for ImageLoadEvent {
-    fn get_pid(&self) -> u32 {
-        self.pid
+impl CleaningInfoTrait for ImageLoadEvent {
+    fn get_pid(&self) -> Pid {
+        Pid(self.pid)
     }
 }
 

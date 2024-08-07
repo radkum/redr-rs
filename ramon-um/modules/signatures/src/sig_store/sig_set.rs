@@ -1,6 +1,6 @@
 use std::mem::size_of;
 
-use common_um::{detection::DetectionReport, redr, sha256_utils::Sha256Buff};
+use common_um::{detection_report::DetectionReport, redr, sha256_utils::Sha256Buff};
 use heuristic_set::HeurSet;
 use serde::{Deserialize, Serialize};
 use sha_set::ShaSet;

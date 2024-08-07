@@ -6,7 +6,7 @@ use common::{
     hasher::MemberHasher,
     utils::{convert_sha256_to_string, sha256_from_sha_string, sha256_from_vec, Sha256Buff},
 };
-use common_um::detection::DetectionReport;
+use common_um::detection_report::DetectionReport;
 use serde::{Deserialize, Serialize};
 pub(super) use yaml_signature::{YamlSigData, YamlSignature};
 

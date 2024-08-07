@@ -10,9 +10,6 @@ enum Input {
     Buff(io::Cursor<Vec<u8>>),
 }
 
-unsafe impl Send for Input {}
-unsafe impl Sync for Input {}
-
 pub struct FileReader {
     input: Arc<RwLock<Input>>,
 }

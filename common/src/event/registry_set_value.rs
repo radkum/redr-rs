@@ -7,8 +7,9 @@ use crate::{
 use alloc::{collections::TryReserveError, string::String, vec::Vec};
 use core::mem;
 use serde::{Deserialize, Serialize};
-use crate::cleaning_info::CleaningInfo;
+use crate::cleaning_info::CleaningInfoTrait;
 use crate::enums::RegType;
+use crate::event::Pid;
 
 #[derive(Debug)]
 pub struct RegistrySetValueEvent {
@@ -211,9 +212,9 @@ impl MemberHasher for RegistrySetValueEvent {
     }
 }
 
-impl CleaningInfo for RegistrySetValueEvent {
-    fn get_pid(&self) -> u32 {
-        self.pid
+impl CleaningInfoTrait for RegistrySetValueEvent {
+    fn get_pid(&self) -> Pid {
+        Pid(self.pid)
     }
 }
 

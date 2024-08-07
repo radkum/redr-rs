@@ -4,7 +4,7 @@ use std::{
 };
 
 use common_um::{
-    detection::DetectionReport,
+    detection_report::DetectionReport,
     redr,
     sha256_utils::{sha256_from_path, Sha256Buff},
 };

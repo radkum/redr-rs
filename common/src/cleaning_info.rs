@@ -1,3 +1,5 @@
-pub trait CleaningInfo {
-    fn get_pid(&self) -> u32;
+use crate::event::Pid;
+
+pub trait CleaningInfoTrait {
+    fn get_pid(&self) -> Pid;
 }

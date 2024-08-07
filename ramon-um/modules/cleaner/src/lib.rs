@@ -1,1 +1,1 @@
-pub mod process_cleaner;
+pub mod cleaner;

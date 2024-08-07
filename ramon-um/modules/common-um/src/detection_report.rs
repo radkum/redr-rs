@@ -15,3 +15,9 @@ impl Display for DetectionReport {
         )
     }
 }
+
+impl Into<String> for DetectionReport {
+    fn into(self) -> String {
+        format!("{}", self)
+    }
+}

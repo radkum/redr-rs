@@ -1,4 +1,5 @@
 use alloc::{collections::TryReserveError, vec::Vec};
+use core::fmt::Formatter;
 use core::mem;
 
 pub mod file_create;
@@ -8,13 +9,22 @@ pub mod registry_set_value;
 
 use crate::{deserializer::Deserializer, hasher::MemberHasher, serializer::Serializer};
 pub use file_create::FileCreateEvent;
-use crate::cleaning_info::CleaningInfo;
+use crate::cleaning_info::CleaningInfoTrait;
 
 pub fn get_event_type(bytes: &[u8]) -> u32 {
     u32::from_blob(bytes)
 }
 
-pub trait Event: Serializer + Deserializer + MemberHasher + CleaningInfo {
+#[derive(Debug, Copy, Clone)]
+pub struct Pid(pub u32);
+
+impl core::fmt::Display for Pid {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+pub trait Event: Serializer + Deserializer + MemberHasher + CleaningInfoTrait {
     const EVENT_CLASS: u32;
 
     fn blob_with_header_size(&self) -> usize {

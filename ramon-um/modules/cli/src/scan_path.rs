@@ -13,7 +13,7 @@ pub(super) fn scan_path(target_path: &str, store_path: String) -> anyhow::Result
 
     create_file_queue(path, &mut queue)?;
 
-    scanner::simple_scan_files(&mut queue, sig_store)?;
+    scanner::simple_scan_files(queue, sig_store)?;
 
     Ok(())
 }

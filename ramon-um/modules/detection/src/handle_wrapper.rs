@@ -1,4 +1,5 @@
 use windows_sys::Win32::Foundation::{CloseHandle, HANDLE};
+
 pub struct SmartHandle(HANDLE);
 
 impl SmartHandle {

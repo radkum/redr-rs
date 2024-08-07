@@ -14,6 +14,8 @@ pub enum ScanError {
     SendMsgError(String),
     #[error("SignatureError: {0}")]
     SignatureError(#[from] SigSetError),
+    #[error("Unknown Event")]
+    UnknownEvent,
 }
 
 impl From<SendError<RamonEvent>> for ScanError {
