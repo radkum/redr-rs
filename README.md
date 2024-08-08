@@ -1,10 +1,10 @@
 # redr-rs
 Rust Endpoint, Detection and Response
 
-###Directory hierarchy
-**ramon-km** - minifilter project 
+### Directory hierarchy
+**redr-km** - kernel part of redr. Ramon minifilter and other drivers
 
-**ramon-um** - user mode program to configure minifilter
+**redr-um** - user mode part of redr. Signatures, scanner, unpacker, sandbox, etc
 
 **common** - shared info between driver and client, like ioctl codes
 
