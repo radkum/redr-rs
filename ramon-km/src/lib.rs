@@ -35,7 +35,7 @@ use log::LevelFilter;
 use winapi::{
     km::wdm::{DEVICE_OBJECT, DRIVER_OBJECT, IRP, IRP_MJ},
     shared::{
-        ntdef::{FALSE, NTSTATUS, PVOID, TRUE, ULONG},
+        ntdef::{FALSE, NTSTATUS, PVOID, TRUE},
         ntstatus::{STATUS_INSUFFICIENT_RESOURCES, STATUS_SUCCESS},
     },
 };
@@ -44,12 +44,13 @@ use crate::{
     alloc::string::ToString, cleaner::Cleaner, irp::complete_irp_success, minifilter::Minifilter,
 };
 
+#[allow(dead_code)]
 pub(crate) const POOL_TAG: u32 = u32::from_ne_bytes(*b"RDER");
 const MAX_ITEM_COUNT: usize = 32;
 
 static mut G_MUTEX: FastMutex = FastMutex::new();
 //static mut G_PROCESS_NAMES: Option<BTreeSet<ULONG>> = None;
-static mut G_PROCESS_NAMES: Option<VecDeque<ULONG>> = None;
+static mut G_FILE_NAMES: Option<VecDeque<usize>> = None;
 static mut G_COOKIE: LARGE_INTEGER = LARGE_INTEGER::new();
 
 #[link_section = "INIT"]
@@ -67,17 +68,17 @@ pub unsafe extern "system" fn DriverEntry(
 
     //--------------------GLOBALS--------------------------------
     G_MUTEX.Init();
-    let mut processes: VecDeque<ULONG> = VecDeque::new();
+    let mut processes: VecDeque<usize> = VecDeque::new();
     if let Err(e) = processes.try_reserve_exact(MAX_ITEM_COUNT) {
         log::info!(
             "fail to reserve a {} bytes of memory. Err: {:?}",
-            ::core::mem::size_of::<ULONG>() * MAX_ITEM_COUNT,
+            ::core::mem::size_of::<usize>() * MAX_ITEM_COUNT,
             e
         );
         return STATUS_INSUFFICIENT_RESOURCES;
     }
     //let processes = processes.into_iter().collect();
-    G_PROCESS_NAMES = Some(processes);
+    G_FILE_NAMES = Some(processes);
 
     //--------------------DISPATCH_ROUTINES-----------------------
     driver.MajorFunction[IRP_MJ::CREATE as usize] = Some(DispatchCreateClose);

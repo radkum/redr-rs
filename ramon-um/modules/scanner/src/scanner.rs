@@ -1,6 +1,9 @@
 use std::sync::Arc;
 
-use ansi_term::{Colour::Red, Style};
+use ansi_term::{
+    Colour::{Green, Red},
+    Style,
+};
 use common_um::redr;
 use tokio::{
     sync::{
@@ -53,16 +56,25 @@ impl Scanner {
                 match event {
                     RamonEvent::CreateFile(file_info) => {
                         let file_name = file_info.1.get_name();
-                        log::debug!("Start scanning '{}' file", file_name.as_str());
+                        //log::debug!("Start scanning '{}' file", file_name.as_str());
+                        log::warn!("Start scanning '{}' file", file_name.as_str());
 
                         match scan_one_file(file_info, signature_store.clone()) {
                             Ok(res) => {
                                 if let ScanResult::Malicious(info, _) = res {
+                                    let info_str = info.into_string();
                                     println!(
                                         "{} - {}",
                                         Red.paint("MALWARE"),
-                                        Style::new().bold().paint(info.into_string())
+                                        Style::new().bold().paint(info_str.clone())
                                     );
+                                    log::warn!(
+                                        "{} - {}",
+                                        Red.paint("MALWARE"),
+                                        Style::new().bold().paint(info_str)
+                                    );
+                                } else {
+                                    log::warn!("{}", Green.paint("CLEAN"),);
                                 }
                             },
                             Err(err) => log::error!("{:?}", err),

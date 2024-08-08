@@ -13,3 +13,6 @@ Todo
 
 #### Stop:
 > fltmc unload minifilter
+
+###TODO
+- better filtering for file events: don't send everything to user mode 

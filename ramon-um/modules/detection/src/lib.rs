@@ -142,8 +142,12 @@ async fn process_message(
     if e == FileCreateEvent::EVENT_CLASS {
         let file_create_event = FileCreateEvent::deserialize(event_buff).unwrap();
         let path = file_create_event.get_path();
-        let file_info = create_file_reader_and_info(path);
-        scanner.process_file(file_info.unwrap()).await?;
+        let file_info_res = create_file_reader_and_info(path.as_str());
+        log::info!("Path: {}", path.as_str());
+        match file_info_res {
+            Ok(file_info) => scanner.process_file(file_info).await?,
+            Err(err) => log::warn!("Path: {}, Err: {:?}", path, err),
+        }
     }
 
     let predicates_and_pid = match e {
@@ -180,11 +184,12 @@ async fn process_message(
 fn print_report(detection_report: MalwareInfo) {
     let report: String = detection_report.into();
     println!("{} - {}", Red.paint("MALWARE"), Style::new().bold().paint(&report));
+    log::warn!("{} - {}", Red.paint("MALWARE"), Style::new().bold().paint(&report));
     output_debug_string(report);
 }
 
-fn create_file_reader_and_info(path: String) -> Result<redr::FileReaderAndInfo, ScanError> {
-    let file = File::open(path.clone())?;
+fn create_file_reader_and_info(path: &str) -> Result<redr::FileReaderAndInfo, ScanError> {
+    let file = File::open(path.to_string())?;
     let file_info = redr::FileScanInfo::real_file(path.into());
     Ok((redr::FileReader::from_file(file), file_info))
 }

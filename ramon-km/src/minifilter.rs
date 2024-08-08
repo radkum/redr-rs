@@ -4,6 +4,7 @@ use alloc::boxed::Box;
 use core::{mem, mem::size_of, ptr::null_mut};
 
 mod file_monitor;
+use common::constants::{COMM_PORT_NAME, FLT_PORT_ALL_ACCESS};
 use file_monitor::FileMonitor;
 use kernel_macros::{NT_SUCCESS, PAGED_CODE};
 use kernel_string::UNICODE_STRING;
@@ -19,9 +20,6 @@ use winapi::{
     },
     um::winnt::PSECURITY_DESCRIPTOR,
 };
-
-use common::constants::COMM_PORT_NAME;
-use common::constants::FLT_PORT_ALL_ACCESS;
 
 use crate::alloc::string::ToString;
 

@@ -150,7 +150,7 @@ fn get_imports(imports: Vec<Import>) -> Result<Vec<Sha256Buff>, SigSetError> {
         ]);
 
         #[cfg(debug_assertions)]
-        log::debug!(
+        log::trace!(
             "import: \"{}{}{} -- {}\"",
             String::from_utf8(import.library().to_vec()).unwrap().to_lowercase(),
             DELIMITER as char,
@@ -183,7 +183,7 @@ impl SigSetTrait for HeurSet {
         //      2   |0 1 0 0 0 0 0 0
         //      3   |0 0 1 0 0 0 0 0
 
-        log::debug!(
+        log::trace!(
             "{:?}",
             imports.iter().map(|i| convert_sha256_to_string(i)).collect::<Vec<_>>()
         );
