@@ -10,5 +10,12 @@ Rust Endpoint, Detection and Response
 
 
 ###TODO
+ - add crate: actions-um
+ - add crate: actions-km
+ - use rade-rs in the kernel
+ - use rade-rs in the um
+ - add amsi
+ - add yara rules
  - ramon-um - convert to service
- - create script to install a whole AV
+ - add elam
+ - add installer
