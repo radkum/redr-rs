@@ -1,4 +1,4 @@
-use common::{
+use shared::{
     event::{
         image_load::ImageLoadEvent, process_create::ProcessCreateEvent,
         registry_set_value::RegistrySetValueEvent, FileCreateEvent,

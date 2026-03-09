@@ -115,9 +115,6 @@ pub fn main() -> anyhow::Result<()> {
                 println!("{} Cause: {e}", Red.paint("ERROR!"))
             }
         },
-        Commands::Sandbox { sig_store_path, file_path } => {
-            sandbox::sandbox_file(file_path.as_str(), sig_store_path.as_str())?
-        },
         Commands::StartDetection { sig_store_path } => {
             detection::start_detection(sig_store_path.as_str()).unwrap()
         },

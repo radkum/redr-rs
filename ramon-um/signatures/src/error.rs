@@ -1,6 +1,6 @@
 use std::ffi::OsString;
 
-use common::utils::ShaError;
+use shared::utils::ShaError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -30,10 +30,10 @@ pub enum SigSetError {
     #[error("Serde yaml error: {0}")]
     SerdeYamlError(#[from] serde_yaml::Error),
     #[error("Sha Error: {0}")]
-    ShaError(common::utils::ShaError),
+    ShaError(shared::utils::ShaError),
 }
 
-impl From<common::utils::ShaError> for SigSetError {
+impl From<shared::utils::ShaError> for SigSetError {
     fn from(value: ShaError) -> Self {
         Self::ShaError(value)
     }

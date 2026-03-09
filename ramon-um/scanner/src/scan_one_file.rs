@@ -4,7 +4,6 @@ use std::{
     sync::Arc,
 };
 
-use cleaner::cleaner::Cleaner;
 use common_um::redr;
 use signatures::sig_store::SignatureStore;
 
@@ -20,7 +19,7 @@ pub(crate) fn scan_one_file(
     if let Some(detection_report) = scan_result {
         let res = ScanResult::Malicious(
             file_scan_info.get_malware_info(detection_report),
-            Cleaner::File(file_scan_info.get_path()),
+            //Cleaner::File(file_scan_info.get_path()),
         );
         return Ok(res);
     }
@@ -56,7 +55,7 @@ fn scan_embedded_files(
             if let Some(detection_info) = scan_result {
                 let res = ScanResult::Malicious(
                     file_scan_info.get_malware_info(detection_info),
-                    Cleaner::File(file_scan_info.get_path()),
+                    //Cleaner::File(file_scan_info.get_path()),
                 );
                 return Ok(res);
             }

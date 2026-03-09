@@ -104,7 +104,7 @@ impl fmt::Display for FilterType {
     }
 }
 
-struct Isolator<'a> {
+pub struct Isolator<'a> {
     provider_guid: GUID,
     provider_name: &'a str,
     sublayer_guid: GUID,

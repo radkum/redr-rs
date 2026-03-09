@@ -3,7 +3,7 @@ use std::{
     io::Read,
 };
 
-use common::utils::{convert_sha256_to_string, sha256_from_vec_of_vec, Sha256Buff};
+use shared::utils::{convert_sha256_to_string, sha256_from_vec_of_vec, Sha256Buff};
 use common_um::{detection_report::DetectionReport, redr};
 use object::{Import, Object};
 

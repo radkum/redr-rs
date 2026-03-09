@@ -1,4 +1,4 @@
-use common::event::{
+use shared::event::{
     file_create::YamlFileCreateEvent, image_load::YamlImageLoadEvent,
     process_create::YamlProcessCreateEvent, registry_set_value::YamlRegistrySetValueEvent,
 };

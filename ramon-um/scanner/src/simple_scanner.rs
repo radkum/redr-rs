@@ -17,7 +17,7 @@ pub fn simple_scan_files(
     for file in files_queue {
         log::debug!("Start scanning file");
 
-        if let ScanResult::Malicious(info, _c) = scan_one_file(file, sig_store.clone())? {
+        if let ScanResult::Malicious(info) = scan_one_file(file, sig_store.clone())? {
             println!(
                 "{} - {}",
                 Red.paint("MALWARE"),

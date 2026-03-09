@@ -4,7 +4,7 @@ pub struct SmartHandle(HANDLE);
 
 impl SmartHandle {
     pub fn new() -> SmartHandle {
-        Self(0)
+        Self(std::ptr::null_mut())
     }
 
     pub fn as_mut_ref(&mut self) -> &mut HANDLE {
@@ -18,7 +18,7 @@ impl SmartHandle {
 
 impl Drop for SmartHandle {
     fn drop(&mut self) {
-        if self.0 != 0 {
+        if !self.0.is_null() {
             unsafe { CloseHandle(self.0) };
         }
     }

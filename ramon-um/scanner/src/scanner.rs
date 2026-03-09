@@ -61,7 +61,7 @@ impl Scanner {
 
                         match scan_one_file(file_info, signature_store.clone()) {
                             Ok(res) => {
-                                if let ScanResult::Malicious(info, _) = res {
+                                if let ScanResult::Malicious(info) = res {
                                     let info_str = info.into_string();
                                     println!(
                                         "{} - {}",

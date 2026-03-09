@@ -14,8 +14,7 @@ use ansi_term::{
     Colour::{Green, Red},
     Style,
 };
-use cleaner::cleaner::Cleaner;
-use common::{
+use shared::{
     cleaning_info::CleaningInfoTrait,
     constants::COMM_PORT_NAME,
     event::{
@@ -68,7 +67,7 @@ fn init_port(port_name: *const u16) -> Option<SmartHandle> {
             null(),
             0,
             null_mut(),
-            connection_port.as_mut_ref() as *mut isize,
+            connection_port.as_mut_ref(),
         )
     };
 
@@ -88,16 +87,16 @@ fn message_loop(connection_port: SmartHandle, sig_store: SignatureStore) {
     // why we need to clone? there is no reason to have two instance of the same sig_store
     let scanner = Scanner::new(arc_sig_store.clone());
 
-    let _t = tokio::spawn(async move {
-        loop {
-            if let Ok(ScanResult::Malicious(d, c)) =
-                process_message(arc_connection_port.clone(), &scanner, arc_sig_store.clone()).await
-            {
-                print_report(d);
-                let _ = c.clean(); //todo
-            }
-        }
-    });
+    // let _t = tokio::spawn(async move {
+    //     loop {
+    //         if let Ok(ScanResult::Malicious(d)) =
+    //             process_message(arc_connection_port.clone(), &scanner, arc_sig_store.clone()).await
+    //         {
+    //             print_report(d);
+    //             //let _ = c.clean(); //todo
+    //         }
+    //     }
+    // });
 
     let stdout = Term::buffered_stdout();
     loop {
@@ -122,7 +121,7 @@ async fn process_message(
 
     let hr = unsafe {
         FilterGetMessage(
-            connection_port.get() as isize,
+            connection_port.get(),
             buff.as_mut_ptr() as *mut FILTER_MESSAGE_HEADER,
             mem::size_of_val(&buff) as u32,
             null_mut(),
@@ -176,7 +175,7 @@ async fn process_message(
     Ok(match detection_report {
         None => ScanResult::Clean,
         Some(report) => {
-            ScanResult::Malicious(MalwareInfo::new(report.into()), Cleaner::Process(pid))
+            ScanResult::Malicious(MalwareInfo::new(report.into()))
         },
     })
 }
@@ -196,7 +195,7 @@ fn create_file_reader_and_info(path: &str) -> Result<redr::FileReaderAndInfo, Sc
 
 #[cfg(test)]
 mod test {
-    use common::{event::registry_set_value::RegistrySetValueEvent, hasher::MemberHasher};
+    use shared::{event::registry_set_value::RegistrySetValueEvent, hasher::MemberHasher};
 
     #[test]
     fn compile_and_eval_signature() {
