@@ -9,11 +9,16 @@ path = "src/lib.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-km-api-sys = { git = "https://github.com/radkum/windows-kernel-rs.git", package = "km-api-sys" }
-kernel-string = { git = "https://github.com/radkum/windows-kernel-rs.git", package = "kernel-string" }
-kernel-macros = { git = "https://github.com/radkum/windows-kernel-rs.git", package = "kernel-macros" }
-kernel-fast-mutex = { git = "https://github.com/radkum/windows-kernel-rs.git", package = "kernel-fast-mutex" }
-kernel-init = { git = "https://github.com/radkum/windows-kernel-rs.git", package = "kernel-init" }
+#km-api-sys = { git = "https://github.com/radkum/windows-kernel-rs.git", package = "km-api-sys" }
+km-api-sys = { path = "../../windows_kernel_rs/km-api-sys" }
+#kernel-string = { git = "https://github.com/radkum/windows-kernel-rs.git", package = "kernel-string" }
+kernel-string = { path = "../../windows_kernel_rs/kernel-string" }
+#kernel-macros = { git = "https://github.com/radkum/windows-kernel-rs.git", package = "kernel-macros" }
+kernel-macros = { path = "../../windows_kernel_rs/kernel-macros" }
+#kernel-fast-mutex = { git = "https://github.com/radkum/windows-kernel-rs.git", package = "kernel-fast-mutex" }
+kernel-fast-mutex = { path = "../../windows_kernel_rs/kernel-fast-mutex" }
+#kernel-init = { git = "https://github.com/radkum/windows-kernel-rs.git", package = "kernel-init" }
+kernel-init = { path = "../../windows_kernel_rs/kernel-init" }
 common = { path = "../common" }
 log = "0.4.20"
 kernel-log = "0.1.2"

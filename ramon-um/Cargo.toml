@@ -1,8 +1,14 @@
+[workspace.dependencies]
+lazy_static = "1.4"
+log = "0.4"
+uuid = "1.4"
+widestring = "0.4.0"
+windows-sys = { version = "0.61.2" }
+
 [workspace]
 resolver = "2"
-members = ["modules/cli", "modules/cleaner", "modules/detection", "modules/scanner", "modules/signatures",
-    "modules/arcom", "modules/common-um"]
-default-members = ["modules/cli", "modules/scanner", "modules/arcom", "modules/detection"]
+members = ["cli", "response", "detection", "scanner", "arcom", "common-um"]
+default-members = ["cli", "scanner", "arcom", "detection"]
 
 [profile.release]
 debug = true
