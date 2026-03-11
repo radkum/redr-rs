@@ -14,9 +14,9 @@ signatures = { path = "../signatures" }
 utils = { path = "../utils" }
 response = { path = "../response" }
 
-anyhow = "~1"
+ansi_term = "~0"
 clap = { version = "~4", features = ["derive"] }
 console = "~0"
 env_logger = "~0"
 log = "~0"
-ansi_term = "~0"
+tokio = { version = "~1", features = ["full"] }

@@ -1630,7 +1630,6 @@ name = "ramon-client"
 version = "0.1.0"
 dependencies = [
  "ansi_term",
- "anyhow",
  "clap",
  "console",
  "database",
@@ -1640,6 +1639,7 @@ dependencies = [
  "response",
  "scanner",
  "signatures",
+ "tokio",
  "utils",
 ]
 
@@ -1742,6 +1742,7 @@ dependencies = [
 name = "response"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "database",
  "lazy_static",
  "log",

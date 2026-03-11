@@ -3,12 +3,15 @@ mod scan_path;
 mod cli;
 use cli::*;
 use clap::Parser;
+use database::Database;
 use std::{env, ffi::OsString};
 
 use ansi_term::Colour::{Green, Red};
+use tokio::
 
 
-pub fn main() -> Result<(), Box<dyn std::error::Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = env::args_os().collect::<Vec<_>>();
     if args.len() == 1 {
         args.push(OsString::from("--help"));
@@ -53,12 +56,10 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
             detection::start_detection(sig_store_path.as_str()).unwrap()
         }
         Commands::Response { response } => {
-            // TODO: Implement isolation handling
-            
             match response {
-                Responses::Isolation(isolation) => {
+                Responses::Isolation { action } => {
                     let isolator = response::Isolator::default();
-                    match isolation {
+                    match action {
                         Isolation::Start => {
                             let mut response = isolator;
                             response.add_allow(std::net::IpAddr::V4(std::net::Ipv4Addr::new(
@@ -78,20 +79,20 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 println!("Isolation is NOT active")
                             }
                         }
-                }
-                }
-                Responses::Quarantine(quarantine) => match quarantine {
-                    Quarantine::List => {
-                        Database::open()?.list()?;
-                        println!("{} Quarantine list displayed", Green.paint("SUCCESS!"))
                     }
-                    Quarantine::Quarantine(path) => {
-                        response.quarantine(path)?;
-                        println!("{} File quarantined", Green.paint("SUCCESS!"))
-                    }
-                    Quarantine::UnquarantineById(id) => {
-                        response.unquarantine_by_id(id)?;
-                        println!("{} File unquarantined", Green.paint("SUCCESS!"))
+                }
+                Responses::Quarantine { action } => {
+                    let database = Database::connect(utils::redr_database_path()).await?;
+                    match action {
+                        Quarantine::List => {
+                            database.list_quarantined_files()?;
+                        }
+                        Quarantine::Perform(file_path) => {
+                            response::quarantine_file(file_path, database).await?;
+                        }
+                        Quarantine::Restore(file_id) => {
+                            response::unquarantine_file(file_id, database).await?;
+                        }
                     }
                 }
             }

@@ -32,14 +32,14 @@ impl Database {
         info: QuarantineInfo,
     ) -> RedrResult<()> {
         let affected = sqlx::query(
-            r#"INSERT OR REPLACE INTO quarantine_files (original_path, quarantine_path, date, id, key, sha) VALUES(?1, ?2, ?3, ?4, ?5, ?6)"#,
+            r#"INSERT OR REPLACE INTO quarantine_files (original_path, quarantine_path, date, qid, key, sha) VALUES(?1, ?2, ?3, ?4, ?5, ?6)"#,
         )
         .bind(info.original_path)
         .bind(info.quarantine_path)
         .bind(info.date)
-        .bind(info.id)
-        .bind(info.key)
-        .bind(info.sha)
+        .bind(&info.id[..])
+        .bind(&info.key[..])
+        .bind(&info.sha[..])
         .execute(&self.pool)
         .await?
         .rows_affected();
@@ -55,22 +55,27 @@ impl Database {
         use sqlx::Row;
 
         let mut rows =
-            sqlx::query("SELECT original_path, quarantine_path, date, id, key, sha FROM quarantine_files ORDER BY date DESC")
+            sqlx::query("SELECT original_path, quarantine_path, date, qid, key, sha FROM quarantine_files ORDER BY date DESC")
                 .fetch(&self.pool);
 
         let mut items = Vec::new();
 
         while let Some(row) = rows.try_next().await? {
-            if let Ok(path) = row.try_get(0) {
-                let date = row.try_get::<DateTime<Utc>, _>(1)?;
-                let status: String = row.try_get(2)?;
-                let id: Vec<u8> = row.try_get(3)?;
-                let key: Vec<u8> = row.try_get(4)?;
-                let sha: Vec<u8> = row.try_get(5)?;
+            if let Ok(original_path) = row.try_get::<String, _>(0) {
+                let quarantine_path: String = row.try_get(1)?;
+                let date = row.try_get::<DateTime<Utc>, _>(2)?;
+                let id_vec: Vec<u8> = row.try_get(3)?;
+                let key_vec: Vec<u8> = row.try_get(4)?;
+                let sha_vec: Vec<u8> = row.try_get(5)?;
+
+                // Convert Vec<u8> to fixed-size arrays
+                let id: [u8; 16] = id_vec.try_into().map_err(|_| "Invalid id length")?;
+                let key: [u8; 32] = key_vec.try_into().map_err(|_| "Invalid key length")?;
+                let sha: [u8; 32] = sha_vec.try_into().map_err(|_| "Invalid sha length")?;
 
                 items.push(QuarantineInfo {
-                    original_path: path,
-                    quarantine_path: status,
+                    original_path,
+                    quarantine_path,
                     date,
                     id,
                     key,

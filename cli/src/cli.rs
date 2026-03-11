@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use clap::{Parser, Subcommand};
 
 #[derive(clap::Args)]
@@ -48,17 +50,22 @@ pub enum Commands {
         sig_store_path: String,
     },
     Response {
-        // isolate
-        #[clap(short, long)]
-        isolation: Isolation,
+        #[command(subcommand)]
+        response: Responses,
     },
 }
 
 #[derive(Subcommand)]
-enum Responses {
+pub enum Responses {
     // isolate
-    Isolation(Isolation),
-    Quarantine(Quarantine),
+    Isolation {
+        #[clap(value_enum)]
+        action: Isolation,
+    },
+    Quarantine {
+        #[clap(value_enum)]
+        action: Quarantine,
+    },
 }
 #[derive(Clone, clap::ValueEnum)]
 pub enum Isolation {
@@ -70,8 +77,8 @@ pub enum Isolation {
 #[derive(Clone, clap::ValueEnum)]
 pub enum Quarantine {
     List,
-    Quarantine(std::path::PathBuf),
-    UnquarantineById(u32),
+    Perform(PathBuf),
+    Restore(Uuid),
 }
 
 #[derive(Parser)]

@@ -4,6 +4,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use chrono::Utc;
 use rkyv::{Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize, rancor::Error};
 use sha2::{Digest, Sha256};
 use shared::{quarantine::QuarantineInfo, sha_buf::Sha256Buff};
@@ -50,7 +51,7 @@ impl QuarantineHeader {
     }
 
     pub fn quarantine_path(&self, path: &Path) -> RedrResult<PathBuf> {
-        Ok(super::quarantine_dir_name()?.join(self.quarantined_filename(path)?))
+        Ok(utils::redr_quarantine_dir().join(self.quarantined_filename(path)?))
     }
 
     pub fn key(&self) -> &Sha256Buff {

@@ -11,7 +11,7 @@ use shared::RedrResult;
 use super::header::QuarantineHeader;
 
 
-pub fn quarantine(path: &Path) -> RedrResult<QuarantineInfo> {
+pub async fn quarantine(path: &Path) -> RedrResult<QuarantineInfo> {
     let mut header = QuarantineHeader::new();
     if !path.exists() {
         return Err(format!("Path {} does not exist", path.display()).into());
@@ -37,7 +37,7 @@ pub fn quarantine(path: &Path) -> RedrResult<QuarantineInfo> {
     // Simple XOR encryption with key and calculate SHA256 of original
     let hasher = header.hasher();
 
-    let sha = utils::encryption::encrypt_file(input_file, output_file, header.key().as_slice(), Some(hasher))?;
+    let sha = utils::encryption::encrypt_file(input_file, output_file, header.key().as_slice(), Some(hasher)).await?;
     header.sha = Sha256Buff::from_vec(sha).map_err(|err| format!("Failed to create SHA256 buffer: {err}"))?;
 
     // Delete the original file

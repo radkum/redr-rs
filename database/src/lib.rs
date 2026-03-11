@@ -36,6 +36,22 @@ impl Database {
     }
 
     /// Establish a new connection pool to the local database.
+    pub async fn connect(db_path: &Path) -> RedrResult<Self> {
+        let opts = SqliteConnectOptions::from_str(&format!("sqlite://{}", db_path.display()))?
+            .journal_mode(SqliteJournalMode::Wal)
+            .create_if_missing(false);
+
+        let pool = SqlitePoolOptions::new()
+            .max_connections(5)
+            .connect_with(opts)
+            .await?;
+
+        Ok(Self {
+            pool,
+        })
+    }
+
+    /// Establish a new connection pool to the local database.
     pub async fn new(db_path: &Path) -> RedrResult<Self> {
         let opts = SqliteConnectOptions::from_str(&format!("sqlite://{}", db_path.display()))?
             .journal_mode(SqliteJournalMode::Wal)

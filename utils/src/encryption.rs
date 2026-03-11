@@ -124,7 +124,7 @@ pub fn encrypt_data(
 /// Encrypts a file in chunks and writes the encrypted data to the output path.
 /// Each chunk is encrypted independently with its own salt and nonce.
 /// Returns the SHA-256 hash of the plaintext file.
-pub fn encrypt_file(
+pub async fn encrypt_file(
     mut input: std::fs::File,
     mut output: std::fs::File,
     password: &[u8],
