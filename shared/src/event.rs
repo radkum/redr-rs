@@ -1,15 +1,16 @@
 use alloc::{collections::TryReserveError, vec::Vec};
-use core::fmt::Formatter;
-use core::mem;
+use core::{fmt::Formatter, mem};
 
 pub mod file_create;
 pub mod image_load;
 pub mod process_create;
 pub mod registry_set_value;
 
-use crate::{deserializer::Deserializer, hasher::MemberHasher, serializer::Serializer};
+use crate::{
+    cleaning_info::CleaningInfoTrait, deserializer::Deserializer, hasher::MemberHasher,
+    serializer::Serializer,
+};
 pub use file_create::FileCreateEvent;
-use crate::cleaning_info::CleaningInfoTrait;
 
 pub fn get_event_type(bytes: &[u8]) -> u32 {
     u32::from_blob(bytes)

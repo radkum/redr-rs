@@ -1,4 +1,4 @@
-use crate::{event::EventHeader, utils::align};
+use crate::{event::EventHeader, sha_buf::align};
 use alloc::{
     string::{String, ToString},
     vec::Vec,

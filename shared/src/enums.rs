@@ -1,5 +1,4 @@
 #[allow(non_camel_case_types)]
-
 #[derive(Copy, Clone)]
 pub enum RegType {
     REG_NONE = 0,
@@ -17,7 +16,7 @@ pub enum RegType {
 }
 impl RegType {
     pub fn is_string(&self) -> bool {
-        let reg_type: u32= self.into();
+        let reg_type: u32 = self.into();
         if reg_type == 1 || reg_type == 2 || reg_type == 6 {
             true
         } else {
@@ -37,7 +36,7 @@ impl From<u32> for RegType {
             2 => Self::REG_EXPAND_SZ,
             3 => Self::REG_BINARY,
             4 => Self::REG_DWORD,
-            5 => Self::REG_DWORD_BIG_ENDIAN ,
+            5 => Self::REG_DWORD_BIG_ENDIAN,
             6 => Self::REG_LINK,
             7 => Self::REG_MULTI_SZ,
             8 => Self::REG_RESOURCE_LIST,

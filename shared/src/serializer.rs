@@ -1,4 +1,4 @@
-use crate::{event::EventHeader, utils::align};
+use crate::{event::EventHeader, sha_buf::align};
 use alloc::{collections::TryReserveError, string::String, vec::Vec};
 use core::mem;
 

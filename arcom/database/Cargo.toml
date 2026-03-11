@@ -1,0 +1,34 @@
+[package]
+name = "database"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+chrono = { workspace = true, default-features = false, features = [
+    "clock",
+    "serde",
+] }
+convert_case = { workspace = true }
+digest = { workspace = true }
+futures = { workspace = true }
+lazy_static = { workspace = true }
+log = { workspace = true, features = ["serde"] }
+serde = { workspace = true, features = ["derive", "rc"] }
+serde_json = { workspace = true }
+sha-1 = { workspace = true }
+sha2 = { workspace = true }
+shlex = "1"
+smart-default = { workspace = true }
+sqlx = { version = "0.8", default-features = false, features = [
+    "bigdecimal",
+    "json",
+    "time",
+    "chrono",
+    "uuid",
+    "runtime-tokio-rustls",
+    "sqlite",
+] }
+tokio = { workspace = true, features = ["full"] }
+
+[dev-dependencies]
+tokio-test = "0.4.4"

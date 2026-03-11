@@ -1,15 +1,15 @@
 use super::{Deserializer, Event, Serializer};
 use crate::{
+    cleaning_info::CleaningInfoTrait,
     deserializer::DeserializerWithSize,
-    hasher::{member_to_hash, MemberHasher},
-    utils::Sha256Buff,
+    enums::RegType,
+    event::Pid,
+    hasher::{MemberHasher, member_to_hash},
+    sha_buf::Sha256Buff,
 };
 use alloc::{collections::TryReserveError, string::String, vec::Vec};
 use core::mem;
 use serde::{Deserialize, Serialize};
-use crate::cleaning_info::CleaningInfoTrait;
-use crate::enums::RegType;
-use crate::event::Pid;
 
 #[derive(Debug)]
 pub struct RegistrySetValueEvent {
@@ -40,7 +40,7 @@ impl From<YamlRegistrySetValueEvent> for RegistrySetValueEvent {
             key_name: yaml.key_name.unwrap_or_default(),
             value_name: yaml.value_name.unwrap_or_default(),
             data_type: yaml.data_type.unwrap_or_default(),
-            data: yaml.data.unwrap_or_default().into()
+            data: yaml.data.unwrap_or_default().into(),
         }
     }
 }
@@ -191,7 +191,8 @@ impl MemberHasher for RegistrySetValueEvent {
         }
 
         if !self.value_name.is_empty() {
-            let value_name = member_to_hash(Self::EVENT_NAME, "value_name", self.value_name.clone());
+            let value_name =
+                member_to_hash(Self::EVENT_NAME, "value_name", self.value_name.clone());
             v.push(value_name);
         }
 
@@ -264,7 +265,7 @@ mod tests {
         );
         let v = e1.hash_members();
         assert_eq!(
-            v[0],
+            v[0].0,
             [
                 84, 206, 227, 212, 1, 254, 12, 72, 89, 14, 153, 91, 71, 68, 184, 166, 163, 0, 227,
                 153, 33, 253, 197, 63, 127, 55, 110, 14, 114, 191, 150, 20

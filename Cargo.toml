@@ -1,0 +1,18 @@
+[workspace.dependencies]
+lazy_static = "1.4"
+log = "0.4"
+rand = "0.8"
+rkyv = "0.8"
+serde = { version = "1.0", default-features = false }
+sha2 = "0.10"
+uuid = "1.4"
+widestring = "0.4"
+windows-sys = { version = "0.61" }
+
+[workspace]
+resolver = "2"
+members = ["cli", "response", "detection", "scanner", "arcom", "utils", "shared"]
+default-members = ["cli", "scanner", "arcom", "detection"]
+
+[profile.release]
+debug = true

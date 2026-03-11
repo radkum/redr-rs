@@ -1,13 +1,13 @@
 use super::{Deserializer, Event, Serializer};
 use crate::{
+    cleaning_info::CleaningInfoTrait,
+    event::Pid,
     hasher::MemberHasher,
-    utils::{sha256_from_bytes, Sha256Buff},
+    sha_buf::{Sha256Buff, sha256_from_bytes},
 };
 use alloc::{collections::TryReserveError, format, string::String, vec::Vec};
 use core::mem;
 use serde::{Deserialize, Serialize};
-use crate::cleaning_info::CleaningInfoTrait;
-use crate::event::Pid;
 
 #[derive(Debug)]
 pub struct ImageLoadEvent {

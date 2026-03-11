@@ -1,4 +1,4 @@
-use crate::utils::{convert_sha256_to_string, sha256_from_bytes, Sha256Buff};
+use crate::sha_buf::{Sha256Buff, convert_sha256_to_string, sha256_from_bytes};
 use alloc::{format, vec::Vec};
 
 pub trait MemberHasher {

@@ -1,18 +1,7 @@
-/.idea/
-
-/common/.idea/
-/common/Cargo.lock
-/common/target/
-
-/ramon-um/.idea/
-/ramon-um/Cargo.lock
-/ramon-um/target/
-
-/ramon-km/.idea/
-/ramon-km/Cargo.lock
-/ramon-km/target/
+/ramon/output/
 /ramon-km/DriverCertificate.cer
 
+/target
 /output/
 /malset/
-/ramon-um/malset.sset
+/malset.sset
