@@ -9,6 +9,7 @@ edition = "2024"
 hex = { version = "~0", default-features = false, features = ["alloc"] }
 log = "~0"
 rand = { workspace = true }
+rkyv = { workspace = true }
 sha2 = { version = "~0", default-features = false }
 serde = { workspace = true, features = ["derive", "alloc"] }
 thiserror-no-std = "~2"

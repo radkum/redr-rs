@@ -34,32 +34,10 @@ impl QuarantineHeader {
 
         debug!("Encrypting and hashing file content");
         // Simple XOR encryption with key and calculate SHA256 of original
-        let mut hasher = Sha256::new();
-        let key = header.key().as_ref();
-        let mut buffer = [0u8; 4096];
-        let mut key_idx = 0usize;
+        let hasher = header.hasher();
 
-        loop {
-            let bytes_read = input_file.read(&mut buffer)?;
-            if bytes_read == 0 {
-                break;
-            }
-
-            // Hash original data
-            hasher.update(&buffer[..bytes_read]);
-
-            // XOR encrypt
-            for byte in &mut buffer[..bytes_read] {
-                *byte ^= key[key_idx % key.len()];
-                key_idx += 1;
-            }
-
-            output_file.write_all(&buffer[..bytes_read])?;
-        }
-
-        // Get the SHA256 hash
-        let sha256_result = hasher.finalize();
-        header.sha = Sha256Buff::from(sha256_result);
+        let sha = utils::encryption::encrypt_file(input_file, output_file, header.key().as_slice(), Some(hasher))?;
+        header.sha = Sha256Buff::from_vec(sha).map_err(|err| format!("Failed to create SHA256 buffer: {err}"))?;
 
         // Delete the original file
         super::delete_file(path)?;

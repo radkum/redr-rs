@@ -1,5 +1,6 @@
 use alloc::{string::String, vec::Vec};
 use core::{cmp::Ordering, mem};
+use rkyv::{Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize};
 use serde::{Deserialize, Serialize};
 use sha2::{
     Digest,
@@ -8,7 +9,10 @@ use sha2::{
 
 pub const SHA256_LEN: usize = 32;
 
-#[derive(Default, Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(
+    Default, Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Archive, RkyvSerialize,
+    RkyvDeserialize,
+)]
 pub struct Sha256Buff(pub [u8; SHA256_LEN]);
 
 impl PartialOrd for Sha256Buff {

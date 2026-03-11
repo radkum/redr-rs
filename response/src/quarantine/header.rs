@@ -1,10 +1,10 @@
 use std::{
     fs::File,
-    io::Write,
+    io::{Read, Write},
     path::{Path, PathBuf},
 };
 
-use serde::{Deserialize, Serialize};
+use rkyv::{Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize, rancor::Error};
 use sha2::{Digest, Sha256};
 use shared::sha_buf::Sha256Buff;
 use shared::RedrResult;
@@ -14,22 +14,24 @@ pub const QUARANTINE_FILE_VERSION: u32 = 0;
 pub const QUARANTINE_FILE_MAGIC: &[u8; 4] = b"QUAR";
 pub const QUARANTINE_FILE_MAGIC_U32: u32 = u32::from_ne_bytes(*QUARANTINE_FILE_MAGIC);
 
-#[derive(Deserialize, Serialize)]
+#[derive(Archive, RkyvSerialize, RkyvDeserialize)]
 pub struct QuarantineHeader {
     magic: u32,
     pub sha: Sha256Buff,
     version: u32,
-    id: Uuid,
+    /// Stored as bytes since Uuid doesn't implement rkyv traits
+    id_bytes: [u8; 16],
     key: Sha256Buff,
 }
 
 impl QuarantineHeader {
     pub fn new() -> Self {
+        let id = Uuid::new_v4();
         Self {
             magic: QUARANTINE_FILE_MAGIC_U32,
             sha: Sha256Buff::default(),
             version: QUARANTINE_FILE_VERSION,
-            id: Uuid::new_v4(),
+            id_bytes: *id.as_bytes(),
             key: Sha256Buff::rand(),
         }
     }
@@ -42,8 +44,8 @@ impl QuarantineHeader {
         &self.key
     }
 
-    fn id(&self) -> &Uuid {
-        &self.id
+    fn id(&self) -> Uuid {
+        Uuid::from_bytes(self.id_bytes)
     }
 
     pub fn quarantined_filename(&self, path: &Path) -> RedrResult<String> {
@@ -51,7 +53,7 @@ impl QuarantineHeader {
             .file_name()
             .and_then(|name| name.to_str().map(String::from))
             .ok_or_else(|| "Could not get file name")?;
-        Ok(format!("{}{}", filename, Self::suffix(self.id.to_string())))
+        Ok(format!("{}{}", filename, Self::suffix(self.id().to_string())))
     }
 
     pub fn suffix<S: AsRef<str>>(id: S) -> String {
@@ -65,20 +67,21 @@ impl QuarantineHeader {
     pub fn hasher(&self) -> Sha256 {
         let mut hasher = Sha256::new();
         hasher.update(&self.version.to_le_bytes());
-        hasher.update(&self.id);
+        hasher.update(&self.id_bytes);
         hasher.update(&self.key);
         hasher
     }
 
     pub fn deserialize_path<P: AsRef<Path>>(file: P) -> RedrResult<Self> {
         let mut file = File::open(file.as_ref())?;
-
-        // read in header size
         Self::deserialize_file(&mut file)
     }
 
     pub fn deserialize_file(file: &mut File) -> RedrResult<Self> {
-        let deserialized: Self = bincode::deserialize_from(file)
+        let mut buf = Vec::new();
+        file.read_to_end(&mut buf)?;
+
+        let deserialized = rkyv::from_bytes::<Self, Error>(&buf)
             .map_err(|err| format!("Unable to parse quarantine file header: {err}"))?;
 
         if deserialized.magic != QUARANTINE_FILE_MAGIC_U32 {
@@ -88,8 +91,9 @@ impl QuarantineHeader {
     }
 
     pub fn serialize_to_file(&self, file: &mut File) -> RedrResult<()> {
-        bincode::serialize_into(file, self)
+        let bytes = rkyv::to_bytes::<Error>(self)
             .map_err(|err| format!("Failed to serialize header: {err}"))?;
+        file.write_all(&bytes)?;
         Ok(())
     }
 }
