@@ -1633,6 +1633,7 @@ dependencies = [
  "anyhow",
  "clap",
  "console",
+ "database",
  "detection",
  "env_logger",
  "log",
@@ -1741,6 +1742,7 @@ dependencies = [
 name = "response"
 version = "0.1.0"
 dependencies = [
+ "database",
  "lazy_static",
  "log",
  "rand",

@@ -2,12 +2,19 @@ mod header;
 mod quarantine;
 mod unquarantine;
 
+use database::Database;
 use shared::RedrResult;
 use std::path::{Path, PathBuf};
 
-pub use header::QuarantineHeader;
+use header::QuarantineHeader;
 
-fn quarantine_dir() -> RedrResult<PathBuf> {
+pub async fn quarantine_file(file_path: &Path, database: Database) -> RedrResult<()> {
+    let quarantine_info = quarantine::quarantine(file_path)?;
+    database.save_quarantine_entry(quarantine_info).await?;
+    Ok(())
+}
+
+fn quarantine_dir_name() -> RedrResult<PathBuf> {
     let exe_path =
         std::env::current_exe().map_err(|e| format!("Failed to get current exe path: {e}"))?;
     let quarantine_dir = exe_path

@@ -6,9 +6,10 @@ use std::{
 
 use rkyv::{Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize, rancor::Error};
 use sha2::{Digest, Sha256};
-use shared::sha_buf::Sha256Buff;
+use shared::{quarantine::QuarantineInfo, sha_buf::Sha256Buff};
 use shared::RedrResult;
 use uuid::Uuid;
+use rkyv::with::Skip;
 
 pub const QUARANTINE_FILE_VERSION: u32 = 0;
 pub const QUARANTINE_FILE_MAGIC: &[u8; 4] = b"QUAR";
@@ -21,6 +22,7 @@ pub struct QuarantineHeader {
     version: u32,
     /// Stored as bytes since Uuid doesn't implement rkyv traits
     id_bytes: [u8; 16],
+    #[rkyv(with = Skip)]
     key: Sha256Buff,
 }
 
@@ -36,8 +38,19 @@ impl QuarantineHeader {
         }
     }
 
+    pub fn quarantine_info(&self, original_path: &Path, quarantine_path: &Path) -> QuarantineInfo {
+        QuarantineInfo {
+            original_path: original_path.to_string_lossy().into_owned(),
+            quarantine_path: quarantine_path.to_string_lossy().into_owned(),
+            date: Utc::now(),
+            id: self.id_bytes,
+            key: self.key.0,
+            sha: self.sha.0,
+        }
+    }
+
     pub fn quarantine_path(&self, path: &Path) -> RedrResult<PathBuf> {
-        Ok(super::quarantine_dir()?.join(self.quarantined_filename(path)?))
+        Ok(super::quarantine_dir_name()?.join(self.quarantined_filename(path)?))
     }
 
     pub fn key(&self) -> &Sha256Buff {
