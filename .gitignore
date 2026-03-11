@@ -2,6 +2,7 @@
 /ramon-km/DriverCertificate.cer
 
 /target
+Cargo.lock
 /output/
 /malset/
 /malset.sset

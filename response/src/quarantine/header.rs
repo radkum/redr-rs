@@ -1,23 +1,20 @@
-use sha2::Digest;
-use shared::RedrResult;
-use shared::sha_buf::Sha256Buff;
 use std::{
     fs::File,
     io::Write,
     path::{Path, PathBuf},
 };
 
-use rkyv::Deserialize;
-use rkyv::Serialize;
-use rkyv::{Archive, deserialize, rancor::Error};
-use sha2::Sha256;
+use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
+use shared::sha_buf::Sha256Buff;
+use shared::RedrResult;
 use uuid::Uuid;
+
 pub const QUARANTINE_FILE_VERSION: u32 = 0;
 pub const QUARANTINE_FILE_MAGIC: &[u8; 4] = b"QUAR";
 pub const QUARANTINE_FILE_MAGIC_U32: u32 = u32::from_ne_bytes(*QUARANTINE_FILE_MAGIC);
 
 #[derive(Deserialize, Serialize)]
-
 pub struct QuarantineHeader {
     magic: u32,
     pub sha: Sha256Buff,
@@ -81,23 +78,18 @@ impl QuarantineHeader {
     }
 
     pub fn deserialize_file(file: &mut File) -> RedrResult<Self> {
-        use std::io::Read;
-
-        // read in header size
-        let mut header_buf = vec![0; std::mem::size_of::<Self>()];
-        let _ = file.read(&mut header_buf)?;
-        let deserialized = rkyv::deserialize::<Self, _>(header_buf)
+        let deserialized: Self = bincode::deserialize_from(file)
             .map_err(|err| format!("Unable to parse quarantine file header: {err}"))?;
 
         if deserialized.magic != QUARANTINE_FILE_MAGIC_U32 {
-            return Err(format!("Invalid file format: magic value does not match").into());
+            return Err("Invalid file format: magic value does not match".into());
         }
         Ok(deserialized)
     }
 
     pub fn serialize_to_file(&self, file: &mut File) -> RedrResult<()> {
-        let bytes = rkyv::to_bytes::<Error>(&self)?;
-        file.write_all(&bytes)?;
+        bincode::serialize_into(file, self)
+            .map_err(|err| format!("Failed to serialize header: {err}"))?;
         Ok(())
     }
 }
