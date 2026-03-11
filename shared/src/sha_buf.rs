@@ -33,6 +33,17 @@ impl AsRef<[u8]> for Sha256Buff {
     }
 }
 
+
+// impl TryFrom<Vec<u8>> for Sha256Buff {
+//     type Error = ShaError;
+
+//     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
+//         let mut buf = [0u8; SHA256_LEN];
+//         buf.copy_from_slice(&value);
+//         Ok(Sha256Buff(buf))
+//     }
+// }
+
 impl From<[u8; SHA256_LEN]> for Sha256Buff {
     fn from(arr: [u8; SHA256_LEN]) -> Self {
         Sha256Buff(arr)
@@ -73,6 +84,17 @@ impl Sha256Buff {
 }
 
 use thiserror_no_std::Error;
+impl From<ShaError> for alloc::boxed::Box<dyn core::error::Error> {
+    fn from(err: ShaError) -> Self {
+        alloc::format!("ShaError: {}", err).into()
+    }
+}
+
+impl core::fmt::Display for Sha256Buff {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "{}", hex::encode_upper(self.0))
+    }
+}
 
 #[derive(Error, Debug)]
 pub enum ShaError {

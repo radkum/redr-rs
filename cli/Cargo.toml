@@ -13,8 +13,10 @@ scanner = { path = "../scanner" }
 signatures = { path = "../signatures" }
 utils = { path = "../utils" }
 response = { path = "../response" }
+shared = { path = "../shared" }
 
 ansi_term = "~0"
+anyhow = "~1"
 clap = { version = "~4", features = ["derive"] }
 console = "~0"
 env_logger = "~0"

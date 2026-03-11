@@ -7,7 +7,6 @@ use database::Database;
 use std::{env, ffi::OsString};
 
 use ansi_term::Colour::{Green, Red};
-use tokio::
 
 
 #[tokio::main]
@@ -27,7 +26,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         _ => log::LevelFilter::Trace,
     };
 
-    env_logger::Builder::new().filter_level(log_level).init();
+    //env_logger::Builder::new().filter_level(log_level).init();
+    env_logger::Builder::new().filter_level(log::LevelFilter::Trace).init();
 
     match args.commands {
         Commands::Signature(signature_command) => match signature_command {
@@ -81,17 +81,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         }
                     }
                 }
-                Responses::Quarantine { action } => {
-                    let database = Database::connect(utils::redr_database_path()).await?;
+                Responses::Quarantine(action) => {
+                    
                     match action {
                         Quarantine::List => {
-                            database.list_quarantined_files()?;
+                            let database = Database::connect(utils::redr_database_path()).await?;
+                            let items = database.get_all_quarantines().await?;
+                            for item in items {
+                                println!("{}: {} -> {}", item.sha, item.original_path, item.quarantine_path);
+                            }
                         }
-                        Quarantine::Perform(file_path) => {
-                            response::quarantine_file(file_path, database).await?;
+                        Quarantine::Perform { file_path } => {
+                            let database = Database::new(Some(utils::redr_database_path())).await?;
+                            response::quarantine_file(&file_path, database).await?;
                         }
-                        Quarantine::Restore(file_id) => {
-                            response::unquarantine_file(file_id, database).await?;
+                        Quarantine::Restore { file_sha} => {
+                            let database = Database::connect(utils::redr_database_path()).await?;
+                            response::unquarantine_file(file_sha, database).await?;
                         }
                     }
                 }

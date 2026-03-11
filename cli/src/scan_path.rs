@@ -2,9 +2,10 @@ use std::{collections::VecDeque, fs::File, path::Path};
 
 use scanner::user_mode_async_scan_files;
 use utils::redr;
+use shared::RedrResult;
 
 #[allow(unused)]
-pub(super) fn scan_path(target_path: &str, store_path: String) -> anyhow::Result<()> {
+pub(super) fn scan_path(target_path: &str, store_path: String) -> RedrResult<()> {
     log::debug!("scan_path: {}", target_path);
     let sig_store = signatures::deserialize_sig_store_from_path(store_path.as_str())?;
 
@@ -18,7 +19,7 @@ pub(super) fn scan_path(target_path: &str, store_path: String) -> anyhow::Result
     Ok(())
 }
 
-pub(super) fn async_scan_path(target_path: &str, store_path: String) -> anyhow::Result<()> {
+pub(super) fn async_scan_path(target_path: &str, store_path: String) -> RedrResult<()> {
     log::debug!("scan_path: {}", target_path);
     let sig_store = signatures::deserialize_sig_store_from_path(store_path.as_str())?;
 
@@ -35,7 +36,7 @@ pub(super) fn async_scan_path(target_path: &str, store_path: String) -> anyhow::
 fn create_file_queue(
     path: &Path,
     mut queue: &mut VecDeque<redr::FileReaderAndInfo>,
-) -> anyhow::Result<()> {
+) -> RedrResult<()> {
     log::debug!("scan_path: {:?}", path);
 
     if path.is_file() {

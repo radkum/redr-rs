@@ -3,6 +3,7 @@ use super::Database;
 use shared::RedrResult;
 use chrono::{DateTime, Utc};
 use shared::quarantine::QuarantineInfo;
+use utils::sha256_utils::Sha256Buff;
 
 impl Database {
     pub async fn quarantine_files_table(&self) -> RedrResult<()> {
@@ -10,11 +11,9 @@ impl Database {
             r#"CREATE TABLE IF NOT EXISTS quarantine_files
                 (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    quarantine_id INTEGER NOT NULL,
                     original_path TEXT NOT NULL,
                     quarantine_path TEXT NOT NULL,
                     date DATETIME NOT NULL,
-                    qid BYTES NOT NULL,
                     key BYTES NOT NULL,
                     sha BYTES NOT NULL,
                     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -32,14 +31,13 @@ impl Database {
         info: QuarantineInfo,
     ) -> RedrResult<()> {
         let affected = sqlx::query(
-            r#"INSERT OR REPLACE INTO quarantine_files (original_path, quarantine_path, date, qid, key, sha) VALUES(?1, ?2, ?3, ?4, ?5, ?6)"#,
+            r#"INSERT OR REPLACE INTO quarantine_files (original_path, quarantine_path, date, key, sha) VALUES(?1, ?2, ?3, ?4, ?5)"#,
         )
         .bind(info.original_path)
         .bind(info.quarantine_path)
         .bind(info.date)
-        .bind(&info.id[..])
-        .bind(&info.key[..])
-        .bind(&info.sha[..])
+        .bind(&info.key.0[..])
+        .bind(&info.sha.0[..])
         .execute(&self.pool)
         .await?
         .rows_affected();
@@ -55,7 +53,7 @@ impl Database {
         use sqlx::Row;
 
         let mut rows =
-            sqlx::query("SELECT original_path, quarantine_path, date, qid, key, sha FROM quarantine_files ORDER BY date DESC")
+            sqlx::query("SELECT original_path, quarantine_path, date, key, sha FROM quarantine_files ORDER BY date DESC")
                 .fetch(&self.pool);
 
         let mut items = Vec::new();
@@ -64,20 +62,17 @@ impl Database {
             if let Ok(original_path) = row.try_get::<String, _>(0) {
                 let quarantine_path: String = row.try_get(1)?;
                 let date = row.try_get::<DateTime<Utc>, _>(2)?;
-                let id_vec: Vec<u8> = row.try_get(3)?;
-                let key_vec: Vec<u8> = row.try_get(4)?;
-                let sha_vec: Vec<u8> = row.try_get(5)?;
+                let key_vec: Vec<u8> = row.try_get(3)?;
+                let sha_vec: Vec<u8> = row.try_get(4)?;
 
                 // Convert Vec<u8> to fixed-size arrays
-                let id: [u8; 16] = id_vec.try_into().map_err(|_| "Invalid id length")?;
-                let key: [u8; 32] = key_vec.try_into().map_err(|_| "Invalid key length")?;
-                let sha: [u8; 32] = sha_vec.try_into().map_err(|_| "Invalid sha length")?;
+                let key: Sha256Buff = Sha256Buff::from_vec(key_vec)?;
+                let sha: Sha256Buff = Sha256Buff::from_vec(sha_vec)?;
 
                 items.push(QuarantineInfo {
                     original_path,
                     quarantine_path,
                     date,
-                    id,
                     key,
                     sha
                 });
@@ -85,5 +80,34 @@ impl Database {
         }
 
         Ok(items)
+    }
+
+    pub async fn get_quarantine_entry(&self, sha: Sha256Buff) -> RedrResult<QuarantineInfo> {
+        use sqlx::Row;
+
+        let row = sqlx::query(
+            "SELECT original_path, quarantine_path, date, key, sha FROM quarantine_files WHERE sha = ?1"
+        )
+        .bind(&sha.0[..])
+        .fetch_one(&self.pool)
+        .await?;
+
+        let original_path: String = row.try_get(0)?;
+        let quarantine_path: String = row.try_get(1)?;
+        let date = row.try_get::<DateTime<Utc>, _>(2)?;
+        let key_vec: Vec<u8> = row.try_get(3)?;
+        let sha_vec: Vec<u8> = row.try_get(4)?;
+
+        // Convert Vec<u8> to fixed-size arrays
+        let key: Sha256Buff = Sha256Buff::from_vec(key_vec)?;
+        let sha: Sha256Buff = Sha256Buff::from_vec(sha_vec)?;
+
+        Ok(QuarantineInfo {
+            original_path,
+            quarantine_path,
+            date,
+            key,
+            sha
+        })
     }
 }

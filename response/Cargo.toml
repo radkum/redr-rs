@@ -9,6 +9,7 @@ database = { path = "../database" }
 shared = { path = "../shared"}
 utils = { path = "../utils"}
 
+hex = { workspace = true }
 lazy_static = { workspace = true }
 log = { workspace = true }
 rand = { workspace = true }

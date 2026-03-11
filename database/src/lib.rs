@@ -37,6 +37,9 @@ impl Database {
 
     /// Establish a new connection pool to the local database.
     pub async fn connect(db_path: &Path) -> RedrResult<Self> {
+        if !db_path.exists() {
+            return Err(format!("Database file {} does not exist", db_path.display()).into());
+        }
         let opts = SqliteConnectOptions::from_str(&format!("sqlite://{}", db_path.display()))?
             .journal_mode(SqliteJournalMode::Wal)
             .create_if_missing(false);
@@ -52,7 +55,8 @@ impl Database {
     }
 
     /// Establish a new connection pool to the local database.
-    pub async fn new(db_path: &Path) -> RedrResult<Self> {
+    pub async fn new(db_path: Option<&Path>) -> RedrResult<Self> {
+        let db_path = db_path.unwrap_or(utils::redr_database_path());
         let opts = SqliteConnectOptions::from_str(&format!("sqlite://{}", db_path.display()))?
             .journal_mode(SqliteJournalMode::Wal)
             .create_if_missing(true);
@@ -62,9 +66,11 @@ impl Database {
             .connect_with(opts)
             .await?;
 
-        Ok(Self {
+        let mut db = Self {
             pool,
-        })
+        };
+        db.init().await?;
+        Ok(db)
     }
 
     pub async fn init(&self) -> RedrResult<()> {

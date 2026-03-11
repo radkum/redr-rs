@@ -2,9 +2,10 @@ mod header;
 mod quarantine;
 mod unquarantine;
 
-use database::Database;
+use shared::quarantine::QuarantineInfo;
 use shared::RedrResult;
-use std::path::{Path, PathBuf};
+use shared::sha_buf::Sha256Buff;
+use std::path::Path;
 
 
 pub async fn quarantine_file(file_path: &std::path::Path, database: database::Database) -> shared::RedrResult<()> {
@@ -13,11 +14,14 @@ pub async fn quarantine_file(file_path: &std::path::Path, database: database::Da
     Ok(())
 }
 
-pub async fn unquarantine_file(file_id: String, database: database::Database) -> shared::RedrResult<()> {
-    let quarantine_info = database.get_quarantine_file(file_id).await?;
-    let quarantine_info = unquarantine::unquarantine_file(quarantine_info).await?;
-    database.save_quarantine_entry(quarantine_info).await?;
-    Ok(())
+pub async fn unquarantine_file(file_sha: String, database: database::Database) -> shared::RedrResult<bool> {
+    let file_sha = hex::decode(file_sha)?;
+    let sha = Sha256Buff::from_vec(file_sha)?;
+    let quarantine_info = database.get_quarantine_entry(sha).await?;
+    let quarantine_path = Path::new(&quarantine_info.quarantine_path);
+    let original_path = Path::new(&quarantine_info.original_path);
+    let result = unquarantine::unquarantine_file(quarantine_path, original_path, &quarantine_info.key)?;
+    Ok(result)
 }
 
 

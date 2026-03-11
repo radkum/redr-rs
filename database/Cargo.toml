@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 shared = { path = "../shared" }
+utils = { path = "../utils" }
 
 chrono = { workspace = true, features = ["alloc"] }
 futures = "0.3"

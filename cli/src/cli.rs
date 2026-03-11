@@ -62,10 +62,8 @@ pub enum Responses {
         #[clap(value_enum)]
         action: Isolation,
     },
-    Quarantine {
-        #[clap(value_enum)]
-        action: Quarantine,
-    },
+    #[command(subcommand)]
+    Quarantine(Quarantine),
 }
 #[derive(Clone, clap::ValueEnum)]
 pub enum Isolation {
@@ -74,11 +72,20 @@ pub enum Isolation {
     Check,
 }
 
-#[derive(Clone, clap::ValueEnum)]
+#[derive(Subcommand)]
 pub enum Quarantine {
+    /// List all quarantined files
     List,
-    Perform(PathBuf),
-    Restore(Uuid),
+    /// Quarantine a file
+    Perform {
+        /// Path to the file to quarantine
+        file_path: PathBuf,
+    },
+    /// Restore a quarantined file
+    Restore {
+        /// ID of the quarantine entry to restore
+        file_sha: String,
+    },
 }
 
 #[derive(Parser)]

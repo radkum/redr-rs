@@ -22,6 +22,7 @@ pub fn decrypt_file(
 ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     use std::io::{Read, Write};
     let mut hasher = hasher.unwrap_or_default();
+    let mut i = 0;
     loop {
         let mut len_bytes = [0u8; 4];
         // Read the length of the next encrypted chunk
@@ -34,6 +35,8 @@ pub fn decrypt_file(
         let decrypted = decrypt_chunk(&encrypted_chunk, password)?;
         hasher.update(&decrypted);
         output_file.write_all(&decrypted)?;
+        i += 1;
+        log::debug!("{} MB decrypted", i);
     }
     let hash = hasher.finalize().to_vec();
     Ok(hash)
@@ -87,18 +90,18 @@ pub fn decrypt_reader<R: std::io::Read>(
     Ok(plaintext)
 }
 
-pub fn save_json_file<T: Serialize>(
+pub async fn save_json_file<T: Serialize>(
     path: &Path,
     password: &[u8],
     data: &T,
 ) -> Result<(), Box<dyn Error>> {
     let json = serde_json::to_vec(data)?;
-    let encrypted = encrypt_data(json, password)?;
+    let encrypted = encrypt_data(json, password).await?;
     std::fs::write(path, encrypted)?;
     Ok(())
 }
 
-pub fn encrypt_data(
+pub async fn encrypt_data(
     plaintext: Vec<u8>,
     password: &[u8],
 ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
@@ -130,6 +133,7 @@ pub async fn encrypt_file(
     password: &[u8],
     hasher: Option<Sha256>,
 ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    let mut i = 0;
     const CHUNK_SIZE: usize = 1024 * 1024; // 1MB per chunk
     let mut buffer = vec![0u8; CHUNK_SIZE];
     let mut hasher = hasher.unwrap_or_default();
@@ -140,11 +144,13 @@ pub async fn encrypt_file(
         }
         let chunk = &buffer[..read_bytes];
         hasher.update(chunk);
-        let encrypted = encrypt_data(chunk.to_vec(), password)?;
+        let encrypted = encrypt_data(chunk.to_vec(), password).await?;
         // Write the length of the encrypted chunk as u32 (big-endian)
         let len_bytes = (encrypted.len() as u32).to_be_bytes();
         output.write_all(&len_bytes)?;
         output.write_all(&encrypted)?;
+        i += 1;
+        log::trace!("{} MB encrypted", i);
     }
     let hash = hasher.finalize().to_vec();
     Ok(hash)

@@ -1,4 +1,4 @@
-pub(crate) fn start_detection(sig_store_path: &str) -> anyhow::Result<()> {
+pub(crate) fn start_detection(sig_store_path: &str) -> shared::RedrResult<()> {
     log::debug!("sig_store_path: {}", sig_store_path);
     let sig_store = signatures::deserialize_sig_store_from_path(sig_store_path)?;
     detection::start_detection(sig_store);

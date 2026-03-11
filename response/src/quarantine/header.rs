@@ -21,20 +21,19 @@ pub struct QuarantineHeader {
     magic: u32,
     pub sha: Sha256Buff,
     version: u32,
-    /// Stored as bytes since Uuid doesn't implement rkyv traits
-    id_bytes: [u8; 16],
     #[rkyv(with = Skip)]
     key: Sha256Buff,
 }
 
 impl QuarantineHeader {
+    pub const fn header_size() -> usize {
+        std::mem::size_of::<u32>() + std::mem::size_of::<Sha256Buff>() + std::mem::size_of::<u32>()
+    }
     pub fn new() -> Self {
-        let id = Uuid::new_v4();
         Self {
             magic: QUARANTINE_FILE_MAGIC_U32,
             sha: Sha256Buff::default(),
             version: QUARANTINE_FILE_VERSION,
-            id_bytes: *id.as_bytes(),
             key: Sha256Buff::rand(),
         }
     }
@@ -44,9 +43,8 @@ impl QuarantineHeader {
             original_path: original_path.to_string_lossy().into_owned(),
             quarantine_path: quarantine_path.to_string_lossy().into_owned(),
             date: Utc::now(),
-            id: self.id_bytes,
-            key: self.key.0,
-            sha: self.sha.0,
+            key: self.key.clone(),
+            sha: self.sha.clone(),
         }
     }
 
@@ -58,16 +56,13 @@ impl QuarantineHeader {
         &self.key
     }
 
-    fn id(&self) -> Uuid {
-        Uuid::from_bytes(self.id_bytes)
-    }
-
     pub fn quarantined_filename(&self, path: &Path) -> RedrResult<String> {
         let filename = path
             .file_name()
             .and_then(|name| name.to_str().map(String::from))
             .ok_or_else(|| "Could not get file name")?;
-        Ok(format!("{}{}", filename, Self::suffix(self.id().to_string())))
+        let id = Uuid::new_v4();
+        Ok(format!("{}{}", filename, Self::suffix(id.to_string())))
     }
 
     pub fn suffix<S: AsRef<str>>(id: S) -> String {
@@ -81,7 +76,6 @@ impl QuarantineHeader {
     pub fn hasher(&self) -> Sha256 {
         let mut hasher = Sha256::new();
         hasher.update(&self.version.to_le_bytes());
-        hasher.update(&self.id_bytes);
         hasher.update(&self.key);
         hasher
     }

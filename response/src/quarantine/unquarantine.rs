@@ -7,7 +7,7 @@ use rkyv::rancor::Error;
 use shared::RedrResult;
 
 use super::header::QuarantineHeader;
-
+use shared::sha_buf::Sha256Buff;
 /// Unquarantine a file, restoring it to the original path
 /// 
 /// # Arguments
@@ -18,7 +18,7 @@ use super::header::QuarantineHeader;
 /// * `Ok(true)` - File was successfully unquarantined
 /// * `Ok(false)` - File could not be unquarantined (e.g., SHA mismatch)
 /// * `Err` - An error occurred
-pub fn unquarantine_file(quarantine_path: &Path, original_path: &Path) -> RedrResult<bool> {
+pub fn unquarantine_file(quarantine_path: &Path, original_path: &Path, key: &Sha256Buff) -> RedrResult<bool> {
     info!(
         "Starting unquarantine: {} -> {}",
         quarantine_path.display(),
@@ -30,7 +30,7 @@ pub fn unquarantine_file(quarantine_path: &Path, original_path: &Path) -> RedrRe
         .map_err(|err| format!("Failed to open quarantine file: {err}"))?;
 
     // Read header - first we need to read the whole file to deserialize the header with rkyv
-    let mut header_data = [0u8; size_of::<QuarantineHeader>()];
+    let mut header_data = [0u8; QuarantineHeader::header_size()];
     quar_file.read_exact(&mut header_data)?;
 
     // Deserialize header from the beginning
@@ -43,6 +43,7 @@ pub fn unquarantine_file(quarantine_path: &Path, original_path: &Path) -> RedrRe
     let output_file = File::create(original_path)
         .map_err(|err| format!("Failed to create output file: {err}"))?;
 
+    log::debug!("Header deserialized successfully");
     // Decrypt content and calculate SHA256
     let hasher = header.hasher();
 
