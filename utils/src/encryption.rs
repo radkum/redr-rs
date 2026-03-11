@@ -13,12 +13,15 @@ pub const AMSI_PASSWORD: &[u8; 32] = b"YDsW_vKS=ds=Bq_#Fz3Fh;2Pws%.wpg=";
 
 /// Decrypts a file encrypted in chunks by encrypt_file, writing the decrypted
 /// data to the output path.
+/// Returns the SHA-256 hash of the decrypted (plaintext) file.
 pub fn decrypt_file(
     mut input_file: std::fs::File,
     mut output_file: std::fs::File,
     password: &[u8],
-) -> Result<(), Box<dyn std::error::Error>> {
+    hasher: Option<Sha256>,
+) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     use std::io::{Read, Write};
+    let mut hasher = hasher.unwrap_or_default();
     loop {
         let mut len_bytes = [0u8; 4];
         // Read the length of the next encrypted chunk
@@ -29,9 +32,11 @@ pub fn decrypt_file(
         let mut encrypted_chunk = vec![0u8; chunk_len];
         input_file.read_exact(&mut encrypted_chunk)?;
         let decrypted = decrypt_chunk(&encrypted_chunk, password)?;
+        hasher.update(&decrypted);
         output_file.write_all(&decrypted)?;
     }
-    Ok(())
+    let hash = hasher.finalize().to_vec();
+    Ok(hash)
 }
 
 /// Helper to decrypt a single chunk (same as decrypt_reader but for &[u8])

@@ -1,11 +1,9 @@
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::Read;
 use std::path::Path;
 
-use log::{debug, info};
+use log::info;
 use rkyv::rancor::Error;
-use sha2::{Digest, Sha256};
-use shared::sha_buf::Sha256Buff;
 use shared::RedrResult;
 
 use super::header::QuarantineHeader;
@@ -42,16 +40,15 @@ pub fn unquarantine_file(quarantine_path: &Path, original_path: &Path) -> RedrRe
         .map_err(|err| format!("Failed to deserialize quarantine header: {err}"))?;
 
     // Create output file
-    let mut output_file = File::create(original_path)
+    let output_file = File::create(original_path)
         .map_err(|err| format!("Failed to create output file: {err}"))?;
 
-    // Decrypt content (XOR decryption is same as encryption) and calculate SHA256
-    let mut hasher = Sha256::new();
+    // Decrypt content and calculate SHA256
     let hasher = header.hasher();
 
-    let calculated_sha = utils::encryption::decrypt_file(quar_file, output_file, header.key().as_ref(), Some(&mut hasher))?;
+    let calculated_sha = utils::encryption::decrypt_file(quar_file, output_file, header.key().as_ref(), Some(hasher))?;
 
-    if calculated_sha != header.sha {
+    if calculated_sha.as_slice() != header.sha.as_ref() {
         // SHA mismatch - delete the output file and return false
         log::warn!(
             "SHA256 mismatch! Expected: {:?}, Got: {:?}",

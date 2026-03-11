@@ -1,4 +1,4 @@
-extern "C" {
+unsafe extern "C" {
     pub fn OutputDebugStringA(lpOutputString: *const u8);
 }
 
