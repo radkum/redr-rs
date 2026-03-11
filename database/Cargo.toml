@@ -1,0 +1,27 @@
+[package]
+name = "database"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+shared = { path = "../shared" }
+
+chrono = { workspace = true, features = ["alloc"] }
+futures = "0.3"
+log = { workspace = true }
+serde_json = { workspace = true }
+shlex = "1"
+smart-default = { workspace = true }
+sqlx = { version = "0", default-features = false, features = [
+    "bigdecimal",
+    "json",
+    "time",
+    "chrono",
+    "uuid",
+    "runtime-tokio-rustls",
+    "sqlite",
+] }
+tokio = { workspace = true, features = ["full"] }
+
+[dev-dependencies]
+tokio-test = "0.4.4"

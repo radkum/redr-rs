@@ -1,5 +1,11 @@
+
+use super::Database;
+use shared::RedrResult;
+use chrono::{DateTime, Utc};
+use shared::quarantine::QuarantineInfo;
+
 impl Database {
-    pub async fn quarantine_files_table(&self) -> Result<()> {
+    pub async fn quarantine_files_table(&self) -> RedrResult<()> {
         sqlx::query(
             r#"CREATE TABLE IF NOT EXISTS quarantine_files
                 (
@@ -18,24 +24,25 @@ impl Database {
         Ok(())
     }
 
-    pub async fn save_quarantine_entry<S: AsRef<str>>(
+    pub async fn save_quarantine_entry(
         &self,
-        path: S,
-        date: DateTime<Utc>,
-        status: S,
-    ) -> Result<u64> {
+        info: QuarantineInfo,
+    ) -> RedrResult<u64> {
         Ok(sqlx::query(
             r#"INSERT OR REPLACE INTO quarantine_files (original_path, quarantine_path, date) VALUES(?1, ?2, ?3)"#,
         )
-        .bind(path.as_ref())
-        .bind(date)
-        .bind(status.as_ref())
+        .bind(info.original_path)
+        .bind(info.quarantine_path)
+        .bind(info.date)
         .execute(&self.pool)
         .await?
         .rows_affected())
     }
 
-    pub async fn get_all_quarantines(&self) -> Result<Vec<(String, String, DateTime<Utc>)>> {
+    pub async fn get_all_quarantines(&self) -> RedrResult<Vec<QuarantineInfo>> {
+        use futures::{TryStreamExt};
+        use sqlx::Row;
+
         let mut rows =
             sqlx::query("SELECT original_path, quarantine_path, date FROM quarantine_files ORDER BY date DESC")
                 .fetch(&self.pool);
@@ -47,7 +54,11 @@ impl Database {
                 let date = row.try_get::<DateTime<Utc>, _>(1)?;
                 let status: String = row.try_get(2)?;
 
-                items.push((path, date, status));
+                items.push(QuarantineInfo {
+                    original_path: path,
+                    quarantine_path: status,
+                    date,
+                });
             }
         }
 

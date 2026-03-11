@@ -9,5 +9,6 @@ pub mod event;
 pub mod hasher;
 pub mod serializer;
 pub mod sha_buf;
+pub mod quarantine;
 
 pub type RedrResult<T> = core::result::Result<T, alloc::boxed::Box<dyn core::error::Error>>;
