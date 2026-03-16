@@ -81,14 +81,14 @@ impl SigSetDeserializer {
         match self.ser_set_header.magic {
             HeurSet::HEUR_MAGIC_U32 => {
                 Ok((Box::new(self.get_set::<HeurSet>()?), SigSetType::Heuristic))
-            }
+            },
             ShaSet::SET_MAGIC_U32 => Ok((Box::new(self.get_set::<ShaSet>()?), SigSetType::Sha)),
             HeurSet::DYN_MAGIC_U32 => {
                 Ok((Box::new(self.get_set::<HeurSet>()?), SigSetType::Dynamic))
-            }
+            },
             HeurSet::BEH_MAGIC_U32 => {
                 Ok((Box::new(self.get_set::<HeurSet>()?), SigSetType::Behavioral))
-            }
+            },
             _ => Err(SigSetError::IncorrectMagicError {
                 current: String::from_utf8_lossy(&self.ser_set_header.magic.to_le_bytes()).into(),
             }),

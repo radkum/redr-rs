@@ -30,7 +30,7 @@ impl FileScanInfo {
                     "\"{name}\" -> Malicious {{ desc: \"{}\", cause: {} }}",
                     detection_info.desc, detection_info.cause
                 )
-            }
+            },
             FileScanInfo::EmbeddedFile {
                 original_file: file,
                 name,
@@ -45,7 +45,7 @@ impl FileScanInfo {
                     detection_info.desc, detection_info.cause
                 );
                 format!("\"{original_name}\" -> Malicious {{ cause: {cause} }}")
-            }
+            },
         })
     }
 
@@ -64,14 +64,14 @@ impl FileScanInfo {
             FileScanInfo::RealFile(file) => {
                 let name: String = file.read().unwrap().name.clone();
                 name.to_string()
-            }
+            },
             FileScanInfo::EmbeddedFile {
                 original_file: _,
                 name,
             } => {
                 //let original_name: String = file.borrow().name.clone();
                 name.to_string()
-            }
+            },
         }
     }
 

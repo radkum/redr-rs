@@ -206,11 +206,11 @@ impl SigSetTrait for HeurSet {
                         .insert(import_sha, self.import_count);
                     self.imports_in_sig.push(import_mask);
                     self.import_count += 1;
-                }
+                },
                 Some(import_id) => {
                     let import_ids = self.imports_in_sig.get_mut(*import_id as usize).unwrap();
                     *import_ids |= import_mask;
-                }
+                },
             }
         }
 

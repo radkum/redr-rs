@@ -1,16 +1,9 @@
 mod quarantines;
 
-use std::path::Path;
 use shared::RedrResult;
-use std::{
-    str::FromStr,
-};
+use std::{path::Path, str::FromStr};
 
-use sqlx::{
-    sqlite::{
-        SqliteConnectOptions, SqliteJournalMode, SqlitePool, SqlitePoolOptions,
-    },
-};
+use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePool, SqlitePoolOptions};
 
 pub type Pool = SqlitePool;
 
@@ -30,9 +23,7 @@ impl Database {
             .connect_with(opts)
             .await?;
 
-        Ok(Self {
-            pool,
-        })
+        Ok(Self { pool })
     }
 
     /// Establish a new connection pool to the local database.
@@ -49,9 +40,7 @@ impl Database {
             .connect_with(opts)
             .await?;
 
-        Ok(Self {
-            pool,
-        })
+        Ok(Self { pool })
     }
 
     /// Establish a new connection pool to the local database.
@@ -66,9 +55,7 @@ impl Database {
             .connect_with(opts)
             .await?;
 
-        let mut db = Self {
-            pool,
-        };
+        let mut db = Self { pool };
         db.init().await?;
         Ok(db)
     }

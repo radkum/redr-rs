@@ -5,12 +5,12 @@ use std::{
 };
 
 use chrono::Utc;
-use rkyv::{Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize, rancor::Error};
+use rkyv::{
+    Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize, rancor::Error, with::Skip,
+};
 use sha2::{Digest, Sha256};
-use shared::{quarantine::QuarantineInfo, sha_buf::Sha256Buff};
-use shared::RedrResult;
+use shared::{RedrResult, quarantine::QuarantineInfo, sha_buf::Sha256Buff};
 use uuid::Uuid;
-use rkyv::with::Skip;
 
 pub const QUARANTINE_FILE_VERSION: u32 = 0;
 pub const QUARANTINE_FILE_MAGIC: &[u8; 4] = b"QUAR";
@@ -19,21 +19,22 @@ pub const QUARANTINE_FILE_MAGIC_U32: u32 = u32::from_ne_bytes(*QUARANTINE_FILE_M
 #[derive(Archive, RkyvSerialize, RkyvDeserialize)]
 pub struct QuarantineHeader {
     magic: u32,
-    pub sha: Sha256Buff,
     version: u32,
+    #[rkyv(with = Skip)]
+    pub sha: Sha256Buff,
     #[rkyv(with = Skip)]
     key: Sha256Buff,
 }
 
 impl QuarantineHeader {
     pub const fn header_size() -> usize {
-        std::mem::size_of::<u32>() + std::mem::size_of::<Sha256Buff>() + std::mem::size_of::<u32>()
+        std::mem::size_of::<u32>() + std::mem::size_of::<u32>()
     }
     pub fn new() -> Self {
         Self {
             magic: QUARANTINE_FILE_MAGIC_U32,
-            sha: Sha256Buff::default(),
             version: QUARANTINE_FILE_VERSION,
+            sha: Sha256Buff::default(),
             key: Sha256Buff::rand(),
         }
     }
@@ -76,7 +77,6 @@ impl QuarantineHeader {
     pub fn hasher(&self) -> Sha256 {
         let mut hasher = Sha256::new();
         hasher.update(&self.version.to_le_bytes());
-        hasher.update(&self.key);
         hasher
     }
 
@@ -102,6 +102,17 @@ impl QuarantineHeader {
         let bytes = rkyv::to_bytes::<Error>(self)
             .map_err(|err| format!("Failed to serialize header: {err}"))?;
         file.write_all(&bytes)?;
+        Ok(())
+    }
+
+    pub fn validate(&self) -> RedrResult<()> {
+        if self.magic != QUARANTINE_FILE_MAGIC_U32 {
+            return Err("Invalid file format: magic value does not match".into());
+        }
+
+        if self.version != QUARANTINE_FILE_VERSION {
+            return Err("Invalid file format: version not supported".into());
+        }
         Ok(())
     }
 }

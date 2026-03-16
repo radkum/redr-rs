@@ -1,15 +1,14 @@
-use std::fs::File;
-use std::io::{Read, Write};
-use std::path::Path;
+use std::{
+    fs::File,
+    io::{Read, Write},
+    path::Path,
+};
 
 use log::{debug, info};
 use sha2::{Digest, Sha256};
-use shared::quarantine::QuarantineInfo;
-use shared::sha_buf::Sha256Buff;
-use shared::RedrResult;
+use shared::{RedrResult, quarantine::QuarantineInfo, sha_buf::Sha256Buff};
 
 use super::header::QuarantineHeader;
-
 
 pub async fn quarantine(path: &Path) -> RedrResult<QuarantineInfo> {
     let mut header = QuarantineHeader::new();
@@ -18,9 +17,8 @@ pub async fn quarantine(path: &Path) -> RedrResult<QuarantineInfo> {
     }
     info!("Starting quarantining file: {}", path.display());
 
-    let mut input_file = File::open(path).map_err(|err| {
-        format!("Failed to open original file {}: {err}", path.display())
-    })?;
+    let input_file = File::open(path)
+        .map_err(|err| format!("Failed to open original file {}: {err}", path.display()))?;
 
     // Check quarantine directory
     let quar_path = header.quarantine_path(path)?;
@@ -37,12 +35,27 @@ pub async fn quarantine(path: &Path) -> RedrResult<QuarantineInfo> {
     // Simple XOR encryption with key and calculate SHA256 of original
     let hasher = header.hasher();
 
-    let sha = utils::encryption::encrypt_file(input_file, output_file, header.key().as_slice(), Some(hasher)).await?;
-    header.sha = Sha256Buff::from_vec(sha).map_err(|err| format!("Failed to create SHA256 buffer: {err}"))?;
+    let sha = utils::encryption::encrypt_file(
+        input_file,
+        output_file,
+        header.key().as_slice(),
+        Some(hasher),
+    )
+    .await?;
+    header.sha = Sha256Buff::from_vec(sha)
+        .map_err(|err| format!("Failed to create SHA256 buffer: {err}"))?;
 
     // Delete the original file
-    super::delete_file(path)?;
+    if let Err(err) = super::delete_file(path) {
+        //if it fails, delete quarantine file
+        super::delete_file(&quar_path)?;
+        return Err(err);
+    }
 
-    log::info!("Successfully quarantined file: {}", path.display());
+    log::info!(
+        "Successfully quarantined file: {}\nsha: {}",
+        path.display(),
+        header.sha
+    );
     Ok(header.quarantine_info(path, &quar_path))
 }

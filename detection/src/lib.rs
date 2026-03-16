@@ -103,7 +103,7 @@ fn message_loop(connection_port: SmartHandle, sig_store: SignatureStore) {
         if let Ok(character) = stdout.read_char() {
             match character {
                 'q' => break,
-                _ => {}
+                _ => {},
             }
         }
     }
@@ -153,18 +153,18 @@ async fn process_message(
         ProcessCreateEvent::EVENT_CLASS => {
             let e = ProcessCreateEvent::deserialize(event_buff);
             e.map(|e| (e.hash_members(), e.get_pid()))
-        }
+        },
         ImageLoadEvent::EVENT_CLASS => {
             let e = ImageLoadEvent::deserialize(event_buff);
             e.map(|e| (e.hash_members(), e.get_pid()))
-        }
+        },
         RegistrySetValueEvent::EVENT_CLASS => {
             let e = RegistrySetValueEvent::deserialize(event_buff);
             e.map(|e| (e.hash_members(), e.get_pid()))
-        }
+        },
         _ => {
             return Err(ScanError::UnknownEvent);
-        }
+        },
     };
 
     let Some((predicates, pid)) = predicates_and_pid else {

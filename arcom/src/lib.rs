@@ -31,7 +31,7 @@ impl ArchiveType {
                 let magic_u64: u64 = u64::from_le_bytes(bytes);
                 //log::trace!("{:X}", magic_u64);
                 MAGIC_U64.get(&magic_u64).map(|ft| ft.clone())
-            }
+            },
             4 => {
                 f.seek(SeekFrom::Start(0)).unwrap();
                 let mut bytes = [0u8; 4];
@@ -43,7 +43,7 @@ impl ArchiveType {
                 let magic_u32: u32 = u32::from_le_bytes(bytes);
                 //log::trace!("{:X}", magic_u32);
                 MAGIC_U32.get(&magic_u32).map(|ft| ft.clone())
-            }
+            },
             _ => todo!(),
         }
     }

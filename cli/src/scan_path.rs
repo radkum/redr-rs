@@ -1,8 +1,8 @@
 use std::{collections::VecDeque, fs::File, path::Path};
 
 use scanner::user_mode_async_scan_files;
-use utils::redr;
 use shared::RedrResult;
+use utils::redr;
 
 #[allow(unused)]
 pub(super) fn scan_path(target_path: &str, store_path: String) -> RedrResult<()> {

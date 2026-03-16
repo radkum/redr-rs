@@ -1,11 +1,19 @@
 use std::{mem::zeroed, net::IpAddr};
 
+use crate::isolation::FilterType;
+
 use super::api::*;
 
 pub struct Condition(pub FWPM_FILTER_CONDITION0);
+impl Default for Condition {
+    fn default() -> Self {
+        let condition: FWPM_FILTER_CONDITION0 = unsafe { zeroed() };
+        Condition(condition)
+    }
+}
 
-impl From<&IpAddr> for Condition {
-    fn from(ip_addr: &IpAddr) -> Condition {
+impl Condition {
+    pub fn from_ip(ip_addr: &IpAddr) -> Condition {
         let mut condition: FWPM_FILTER_CONDITION0 = unsafe { zeroed() };
 
         condition.fieldKey = FWPM_CONDITION_IP_REMOTE_ADDRESS;
@@ -25,7 +33,7 @@ impl From<&IpAddr> for Condition {
 
                 condition.conditionValue.type_ = FWP_DATA_TYPE__FWP_V4_ADDR_MASK;
                 condition.conditionValue.__bindgen_anon_1 = cond_mask;
-            }
+            },
             IpAddr::V6(ip) => {
                 let mut ip_mask: Box<FWP_V6_ADDR_AND_MASK> = unsafe { Box::new(zeroed()) };
 
@@ -40,10 +48,25 @@ impl From<&IpAddr> for Condition {
                 condition.conditionValue.__bindgen_anon_1 = FWP_CONDITION_VALUE0___bindgen_ty_1 {
                     v6AddrMask: &mut *ip_mask,
                 };
-            }
+            },
         }
 
         Condition(condition)
+    }
+
+    pub fn from_port(port: u16, filter_type: &FilterType) -> Condition {
+        let field_key = match filter_type {
+            FilterType::Inbound => FWPM_CONDITION_IP_LOCAL_PORT,
+            FilterType::Outbound => FWPM_CONDITION_IP_REMOTE_PORT,
+        };
+
+        let mut port_condition: FWPM_FILTER_CONDITION0 = unsafe { zeroed() };
+        port_condition.fieldKey = field_key;
+        port_condition.matchType = FWP_MATCH_TYPE__FWP_MATCH_EQUAL;
+        port_condition.conditionValue.type_ = FWP_DATA_TYPE__FWP_UINT16;
+        port_condition.conditionValue.__bindgen_anon_1.uint16 = port;
+
+        Condition(port_condition)
     }
 }
 

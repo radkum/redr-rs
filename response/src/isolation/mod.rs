@@ -94,8 +94,8 @@ pub struct Isolator<'a> {
     provider_name: &'a str,
     sublayer_guid: GUID,
     sublayer_name: &'a str,
-    #[allow(dead_code)]
-    allow: Vec<IpAddr>,
+    allow_ip: Vec<IpAddr>,
+    allow_port: Vec<u16>,
 }
 
 impl Default for Isolator<'_> {
@@ -105,7 +105,8 @@ impl Default for Isolator<'_> {
             provider_name: "Redr",
             sublayer_guid: SUBLAYER_GUID,
             sublayer_name: "RedrSublayer",
-            allow: Vec::new(),
+            allow_ip: Vec::new(),
+            allow_port: Vec::new(),
         }
     }
 }
@@ -131,9 +132,14 @@ impl Isolator<'_> {
             )?;
         }
 
-        for allow in &self.allow {
-            self.allow(&engine, allow, FilterType::Inbound)?;
-            self.allow(&engine, allow, FilterType::Outbound)?;
+        for allow in &self.allow_ip {
+            self.allow_ip(&engine, allow, FilterType::Inbound)?;
+            self.allow_ip(&engine, allow, FilterType::Outbound)?;
+        }
+
+        for allow in &self.allow_port {
+            self.allow_port(&engine, *allow, FilterType::Inbound)?;
+            self.allow_port(&engine, *allow, FilterType::Outbound)?;
         }
 
         Ok(())
@@ -155,8 +161,13 @@ impl Isolator<'_> {
         Ok(())
     }
 
-    fn allow(&self, engine: &FwpmEngine, ip: &IpAddr, filter_type: FilterType) -> RedrResult<()> {
-        let condition = condition::Condition::from(ip);
+    fn allow_ip(
+        &self,
+        engine: &FwpmEngine,
+        ip: &IpAddr,
+        filter_type: FilterType,
+    ) -> RedrResult<()> {
+        let condition = condition::Condition::from_ip(ip);
         let layer = match ip {
             IpAddr::V4(_) => filter_type.ip_v4(),
             IpAddr::V6(_) => filter_type.ip_v6(),
@@ -167,14 +178,41 @@ impl Isolator<'_> {
             &self.provider_guid,
             &self.sublayer_guid,
             FwpmAction::Permit(condition),
-            &format!("Redr allow {filter_type} to {}:*", ip),
+            &format!("Redr allow {filter_type} to ip {}:*", ip),
         )?;
 
         Ok(())
     }
 
-    pub fn add_allow(&mut self, ip: IpAddr) {
-        self.allow.push(ip);
+    fn allow_port(
+        &self,
+        engine: &FwpmEngine,
+        port: u16,
+        filter_type: FilterType,
+    ) -> RedrResult<()> {
+        let condition = condition::Condition::from_port(port, &filter_type);
+        let layer = match filter_type {
+            FilterType::Inbound => filter_type.ip_v4(),
+            FilterType::Outbound => filter_type.ip_v6(),
+        };
+
+        engine.add_filter(
+            &layer,
+            &self.provider_guid,
+            &self.sublayer_guid,
+            FwpmAction::Permit(condition),
+            &format!("Redr allow {filter_type} to port {}", port),
+        )?;
+
+        Ok(())
+    }
+
+    pub fn add_allow_ip(&mut self, ip: IpAddr) {
+        self.allow_ip.push(ip);
+    }
+
+    pub fn add_allow_port(&mut self, port: u16) {
+        self.allow_port.push(port);
     }
 
     pub fn status(&self) -> RedrResult<bool> {

@@ -10,7 +10,16 @@ use sha2::{
 pub const SHA256_LEN: usize = 32;
 
 #[derive(
-    Default, Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Archive, RkyvSerialize,
+    Default,
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    Serialize,
+    Deserialize,
+    Archive,
+    RkyvSerialize,
     RkyvDeserialize,
 )]
 pub struct Sha256Buff(pub [u8; SHA256_LEN]);
@@ -32,7 +41,6 @@ impl AsRef<[u8]> for Sha256Buff {
         &self.0
     }
 }
-
 
 // impl TryFrom<Vec<u8>> for Sha256Buff {
 //     type Error = ShaError;

@@ -1,8 +1,6 @@
-
 use super::Database;
-use shared::RedrResult;
 use chrono::{DateTime, Utc};
-use shared::quarantine::QuarantineInfo;
+use shared::{RedrResult, quarantine::QuarantineInfo};
 use utils::sha256_utils::Sha256Buff;
 
 impl Database {
@@ -26,10 +24,7 @@ impl Database {
         Ok(())
     }
 
-    pub async fn save_quarantine_entry(
-        &self,
-        info: QuarantineInfo,
-    ) -> RedrResult<()> {
+    pub async fn save_quarantine_entry(&self, info: QuarantineInfo) -> RedrResult<()> {
         let affected = sqlx::query(
             r#"INSERT OR REPLACE INTO quarantine_files (original_path, quarantine_path, date, key, sha) VALUES(?1, ?2, ?3, ?4, ?5)"#,
         )
@@ -49,12 +44,14 @@ impl Database {
     }
 
     pub async fn get_all_quarantines(&self) -> RedrResult<Vec<QuarantineInfo>> {
-        use futures::{TryStreamExt};
+        use futures::TryStreamExt;
         use sqlx::Row;
 
-        let mut rows =
-            sqlx::query("SELECT original_path, quarantine_path, date, key, sha FROM quarantine_files ORDER BY date DESC")
-                .fetch(&self.pool);
+        let mut rows = sqlx::query(
+            "SELECT original_path, quarantine_path, date, key, sha FROM quarantine_files ORDER BY \
+             date DESC",
+        )
+        .fetch(&self.pool);
 
         let mut items = Vec::new();
 
@@ -74,7 +71,7 @@ impl Database {
                     quarantine_path,
                     date,
                     key,
-                    sha
+                    sha,
                 });
             }
         }
@@ -82,11 +79,12 @@ impl Database {
         Ok(items)
     }
 
-    pub async fn get_quarantine_entry(&self, sha: Sha256Buff) -> RedrResult<QuarantineInfo> {
+    pub async fn get_quarantine_entry(&self, sha: &Sha256Buff) -> RedrResult<QuarantineInfo> {
         use sqlx::Row;
 
         let row = sqlx::query(
-            "SELECT original_path, quarantine_path, date, key, sha FROM quarantine_files WHERE sha = ?1"
+            "SELECT original_path, quarantine_path, date, key, sha FROM quarantine_files WHERE \
+             sha = ?1",
         )
         .bind(&sha.0[..])
         .fetch_one(&self.pool)
@@ -107,7 +105,22 @@ impl Database {
             quarantine_path,
             date,
             key,
-            sha
+            sha,
         })
+    }
+
+    pub async fn delete_quarantine_entry(&self, sha: &Sha256Buff) -> RedrResult<()> {
+        let affected = sqlx::query("DELETE FROM quarantine_files WHERE sha = ?1")
+            .bind(&sha.0[..])
+            .execute(&self.pool)
+            .await?
+            .rows_affected();
+
+        if affected > 0 {
+            log::info!("Quarantine entry deleted: {affected}");
+        } else {
+            log::warn!("No quarantine entry found with the given SHA");
+        }
+        Ok(())
     }
 }

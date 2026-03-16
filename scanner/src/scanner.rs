@@ -79,10 +79,10 @@ impl Scanner {
                                 } else {
                                     log::warn!("{}", Green.paint("CLEAN"),);
                                 }
-                            }
+                            },
                             Err(err) => log::error!("{:?}", err),
                         }
-                    }
+                    },
                     RamonEvent::Close => receiver.close(),
                 }
             }

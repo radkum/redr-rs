@@ -97,7 +97,7 @@ impl From<Signature> for DetectionReport {
             SigData::Calls(calls) => format!("Found {} suspicious calls", calls.len()),
             SigData::Event(attributes) => {
                 format!("Matched event with {} attributes", attributes.len())
-            }
+            },
         };
         Self {
             name: sig.base.name,
@@ -139,32 +139,32 @@ impl SigData {
             YamlSigData::Sha(sha) => Self::Sha(sha256_from_sha_string(sha.as_str())?),
             YamlSigData::Imports(imports) => {
                 Self::Imports(imports.iter().map(|s| import_string_to_sha(s)).collect())
-            }
+            },
             YamlSigData::Calls(calls) => {
                 Self::Calls(calls.iter().map(|s| import_string_to_sha(s)).collect())
-            }
+            },
             YamlSigData::Event(event_data) => {
                 let hash_list = match event_data {
                     EventData::RegSetValue(yaml_event) => {
                         let event = RegistrySetValueEvent::from(yaml_event);
                         event.hash_members()
-                    }
+                    },
                     EventData::FileCreate(yaml_event) => {
                         let event = FileCreateEvent::from(yaml_event);
                         event.hash_members()
-                    }
+                    },
                     EventData::ProcessCreate(yaml_event) => {
                         let event = ProcessCreateEvent::from(yaml_event);
                         event.hash_members()
-                    }
+                    },
                     EventData::ImageLoad(yaml_event) => {
                         let event = ImageLoadEvent::from(yaml_event);
                         event.hash_members()
-                    }
+                    },
                 };
 
                 Self::Event(hash_list)
-            }
+            },
         })
     }
 }

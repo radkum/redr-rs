@@ -1,24 +1,24 @@
-use std::fs::File;
-use std::io::Read;
-use std::path::Path;
+use std::{fs::File, io::Read, path::PathBuf};
 
 use log::info;
 use rkyv::rancor::Error;
-use shared::RedrResult;
+use shared::{RedrResult, quarantine::QuarantineInfo};
 
 use super::header::QuarantineHeader;
 use shared::sha_buf::Sha256Buff;
 /// Unquarantine a file, restoring it to the original path
-/// 
+///
 /// # Arguments
 /// * `quarantine_path` - Path to the quarantined file (.qrt file)
 /// * `original_path` - Path where the restored file should be written
-/// 
+///
 /// # Returns
 /// * `Ok(true)` - File was successfully unquarantined
 /// * `Ok(false)` - File could not be unquarantined (e.g., SHA mismatch)
 /// * `Err` - An error occurred
-pub fn unquarantine_file(quarantine_path: &Path, original_path: &Path, key: &Sha256Buff) -> RedrResult<bool> {
+pub fn unquarantine_file(info: QuarantineInfo) -> RedrResult<bool> {
+    let quarantine_path = PathBuf::from(info.quarantine_path);
+    let original_path = PathBuf::from(info.original_path);
     info!(
         "Starting unquarantine: {} -> {}",
         quarantine_path.display(),
@@ -26,7 +26,7 @@ pub fn unquarantine_file(quarantine_path: &Path, original_path: &Path, key: &Sha
     );
 
     // Open the quarantine file
-    let mut quar_file = File::open(quarantine_path)
+    let mut quar_file = File::open(quarantine_path.as_path())
         .map_err(|err| format!("Failed to open quarantine file: {err}"))?;
 
     // Read header - first we need to read the whole file to deserialize the header with rkyv
@@ -39,24 +39,28 @@ pub fn unquarantine_file(quarantine_path: &Path, original_path: &Path, key: &Sha
     let header = rkyv::from_bytes::<QuarantineHeader, Error>(&header_data)
         .map_err(|err| format!("Failed to deserialize quarantine header: {err}"))?;
 
+    //check file magic and version
+    header.validate()?;
+
     // Create output file
-    let output_file = File::create(original_path)
+    let output_file = File::create(original_path.as_path())
         .map_err(|err| format!("Failed to create output file: {err}"))?;
 
     log::debug!("Header deserialized successfully");
     // Decrypt content and calculate SHA256
     let hasher = header.hasher();
 
-    let calculated_sha = utils::encryption::decrypt_file(quar_file, output_file, header.key().as_ref(), Some(hasher))?;
+    let calculated_sha =
+        utils::encryption::decrypt_file(quar_file, output_file, info.key.as_ref(), Some(hasher))?;
 
-    if calculated_sha.as_slice() != header.sha.as_ref() {
+    if calculated_sha.as_slice() != info.sha.as_ref() {
         // SHA mismatch - delete the output file and return false
         log::warn!(
-            "SHA256 mismatch! Expected: {:?}, Got: {:?}",
-            header.sha,
-            calculated_sha
+            "SHA256 mismatch! Expected: {}, Got: {}",
+            info.sha,
+            Sha256Buff::from_vec(calculated_sha).unwrap_or_default()
         );
-        std::fs::remove_file(original_path).ok(); // Best effort cleanup
+        std::fs::remove_file(original_path.as_path()).ok(); // Best effort cleanup
         return Ok(false);
     }
 

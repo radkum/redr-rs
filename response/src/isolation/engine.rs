@@ -3,13 +3,11 @@ use std::ptr::null_mut;
 use shared::RedrResult;
 use widestring::WideCString;
 
-use super::api::*;
-use super::condition::Condition;
+use super::{api::*, condition::Condition};
 
 const FWPM_PROVIDER_FLAG_PERSISTENT: u32 = 0x00000001;
 const FWPM_FILTER_FLAG_PERSISTENT: u32 = 0x00000001;
 const FWP_E_ALREADY_EXISTS: u32 = 0x80320009;
-const FWP_E_SUBLAYER_NOT_FOUND: u32 = 0x80320005;
 
 pub struct FwpmEngine {
     handle: HANDLE,
