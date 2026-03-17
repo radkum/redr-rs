@@ -1,10 +1,5 @@
-use std::{os::raw::c_void, ptr::null_mut};
 
 use windows_sys::{
-    Win32::{
-        Foundation::{GetLastError, LocalFree},
-        System::Diagnostics::Debug::*,
-    },
     core::HRESULT,
 };
 
@@ -16,14 +11,12 @@ pub fn print_hr_result(msg: &str, error_code: HRESULT) {
 }
 
 fn print_error(msg: &str, error_code: u32) {
-    let error_msg = windows::win32_error_to_string(error_code).unwrap_or("Failed to get msg".to_string());
-
     let space = if !msg.is_empty() { ", " } else { "" };
 
     println!(
         "{msg}{space}ErrorCode: 0x{:08x}, ErrorMsg: \"{}\"",
         error_code,
-        error_msg.trim_end()
+        windows::win32_error_to_string(error_code).trim_end()
     );
 }
 

@@ -1,18 +1,29 @@
 use thiserror::Error;
+use utils::windows::Win32Error;
 
 #[derive(Error, Debug)]
 pub enum DeleteError {
     #[error("Win32 error: {0}")]
-    Win32(u32, String),
+    Win32(Win32Error),
 
     #[error("Message: {0}")]
-    Msg(&'static str),
+    Msg(String),
+}
+
+impl From<Win32Error> for DeleteError {
+    fn from(err: Win32Error) -> DeleteError {
+        DeleteError::Win32(err)
+    }
+}
+
+impl From<&str> for DeleteError {
+    fn from(err: &str) -> DeleteError {
+        DeleteError::Msg(err.into())
+    }
 }
 
 impl DeleteError {
-    fn last_err() -> DeleteError {
-        let code = windows::last_error();
-        let message = windows::last_error_as_string();
-        DeleteError::Win32(code, message)
+    pub fn last_err() -> DeleteError {
+        Win32Error::last().into()
     }
 }

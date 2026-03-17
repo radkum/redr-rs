@@ -2,7 +2,7 @@ mod header;
 mod quarantine;
 mod unquarantine;
 
-use shared::{RedrResult, quarantine::QuarantineInfo, sha_buf::Sha256Buff};
+use shared::{RedrResult, sha_buf::Sha256Buff};
 use std::path::Path;
 
 pub async fn quarantine_file(

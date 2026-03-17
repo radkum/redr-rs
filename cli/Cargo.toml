@@ -17,8 +17,9 @@ shared = { path = "../shared" }
 
 ansi_term = "~0"
 anyhow = "~1"
+chrono = "~0"
 clap = { version = "~4", features = ["derive"] }
 console = "~0"
-env_logger = "~0"
+fern = "~0"
 log = "~0"
 tokio = { version = "~1", features = ["full"] }

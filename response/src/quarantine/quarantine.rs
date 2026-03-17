@@ -1,11 +1,9 @@
 use std::{
     fs::File,
-    io::{Read, Write},
     path::Path,
 };
 
 use log::{debug, info};
-use sha2::{Digest, Sha256};
 use shared::{RedrResult, quarantine::QuarantineInfo, sha_buf::Sha256Buff};
 
 use super::header::QuarantineHeader;

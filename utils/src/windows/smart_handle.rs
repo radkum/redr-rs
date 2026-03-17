@@ -1,10 +1,15 @@
 use windows_sys::Win32::Foundation::{CloseHandle, HANDLE};
-
+use super::Win32Error;
+use super::Win32Result;
 pub struct SmartHandle(HANDLE);
 
 impl SmartHandle {
-    pub fn new() -> SmartHandle {
-        Self(std::ptr::null_mut())
+    pub fn new(handle: HANDLE) -> Win32Result<SmartHandle> {
+        if handle.is_null() {
+            Err(Win32Error::last())
+        } else {
+            Ok(Self(handle))
+        }
     }
 
     pub fn as_mut_ref(&mut self) -> &mut HANDLE {
@@ -13,6 +18,12 @@ impl SmartHandle {
 
     pub fn get(&self) -> HANDLE {
         self.0
+    }
+}
+
+impl Default for SmartHandle {
+    fn default() -> Self {
+        Self(std::ptr::null_mut())
     }
 }
 

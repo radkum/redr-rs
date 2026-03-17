@@ -64,6 +64,16 @@ pub enum Responses {
     },
     #[command(subcommand)]
     Quarantine(Quarantine),
+    /// Force delete a file (handles locked files)
+    DeleteFile {
+        /// Path to the file to delete
+        file_path: String,
+    },
+    /// Terminate a process by PID
+    TerminateProcess {
+        /// Process ID to terminate
+        pid: u32,
+    },
 }
 #[derive(Clone, clap::ValueEnum)]
 pub enum Isolation {

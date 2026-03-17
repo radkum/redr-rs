@@ -35,9 +35,9 @@ use windows_sys::Win32::{
 
 use crate::{
     print_error::{print_hr_result, print_last_error},
-    handle_wrapper::SmartHandle,
-    winapi::output_debug_string,
 };
+use utils::windows::SmartHandle;
+use utils::windows::output_debug_string;
 
 #[tokio::main]
 pub async fn start_detection(signatures: SignatureStore) {
@@ -56,7 +56,7 @@ pub async fn start_detection(signatures: SignatureStore) {
 }
 
 fn init_port(port_name: *const u16) -> Option<SmartHandle> {
-    let mut connection_port = SmartHandle::new();
+    let mut connection_port = SmartHandle::default();
 
     let hr = unsafe {
         FilterConnectCommunicationPort(

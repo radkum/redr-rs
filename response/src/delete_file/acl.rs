@@ -1,97 +1,69 @@
+use std::ptr;
+use windows_sys::Win32::{
+    Foundation::*,
+    Security::*,
+    Security::Authorization::*,
+    System::Threading::*,
+};
+
+use utils::windows::{self, SmartBuffer};
 use super::DeleteError;
+use crate::enable_privilege;
+use crate::Priviledge;
 
 pub(super) fn fix_permissions(path: &str) -> Result<(), DeleteError> {
-    enable_privilege("SeTakeOwnershipPrivilege")?;
-    enable_privilege("SeRestorePrivilege")?;
+    enable_privilege(Priviledge::TakeOwnership)?;
+    enable_privilege(Priviledge::Restore)?;
 
-    let w = to_wide(path);
+    let w = windows::to_wide(path);
 
     unsafe {
         let mut sid = vec![0u8; SECURITY_MAX_SID_SIZE as usize];
         let mut size = sid.len() as u32;
 
-        CreateWellKnownSid(
+        if CreateWellKnownSid(
             WinBuiltinAdministratorsSid,
-            None,
+            ptr::null_mut(),
             sid.as_mut_ptr() as _,
             &mut size,
-        )
-        .ok()
-        .map_err(|_| last_err())?;
+        ) == 0 {
+            return Err(DeleteError::last_err());
+        }
 
         // Take ownership
         SetNamedSecurityInfoW(
-            PWSTR(w.as_ptr() as _),
+            w.as_ptr() as _,
             SE_FILE_OBJECT,
             OWNER_SECURITY_INFORMATION,
             sid.as_mut_ptr() as _,
-            None,
-            None,
-            None,
+            ptr::null_mut(),
+            ptr::null_mut(),
+            ptr::null_mut(),
         );
 
         // Build ACL
-        let mut ea = EXPLICIT_ACCESS_W::default();
+        let mut ea: EXPLICIT_ACCESS_W = std::mem::zeroed();
 
         ea.grfAccessPermissions = GENERIC_ALL;
         ea.grfAccessMode = SET_ACCESS;
         ea.grfInheritance = NO_INHERITANCE;
 
         BuildTrusteeWithSidW(&mut ea.Trustee, sid.as_mut_ptr() as _);
+        let mut new_acl = SmartBuffer::<ACL>::new();
 
-        let mut new_acl = ptr::null_mut();
-
-        SetEntriesInAclW(1, &mut ea, None, &mut new_acl)
-            .ok()
-            .map_err(|_| last_err())?;
+        if SetEntriesInAclW(1, &mut ea, ptr::null_mut(), new_acl.as_mut_ref()) != 0 {
+            return Err(DeleteError::last_err());
+        }
 
         SetNamedSecurityInfoW(
-            PWSTR(w.as_ptr() as _),
+            w.as_ptr() as _,
             SE_FILE_OBJECT,
             DACL_SECURITY_INFORMATION,
-            None,
-            None,
-            new_acl,
-            None,
+            ptr::null_mut(),
+            ptr::null_mut(),
+            new_acl.get(),
+            ptr::null_mut(),
         );
-
-        LocalFree(new_acl as _);
-    }
-
-    Ok(())
-}
-
-//
-// ================= PRIVILEGES =================
-//
-
-fn enable_privilege(name: &str) -> Result<(), DeleteError> {
-    unsafe {
-        let mut token = HANDLE::default();
-
-        OpenProcessToken(
-            GetCurrentProcess(),
-            TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,
-            &mut token,
-        ).ok().map_err(|_| last_err())?;
-
-        let mut luid = LUID::default();
-
-        LookupPrivilegeValueW(None, &to_wide(name), &mut luid)
-            .ok()
-            .map_err(|_| last_err())?;
-
-        let tp = TOKEN_PRIVILEGES {
-            PrivilegeCount: 1,
-            Privileges: [LUID_AND_ATTRIBUTES {
-                Luid: luid,
-                Attributes: SE_PRIVILEGE_ENABLED,
-            }],
-        };
-
-        AdjustTokenPrivileges(token, false, Some(&tp), 0, None, None)
-            .ok()
-            .map_err(|_| last_err())?;
     }
 
     Ok(())

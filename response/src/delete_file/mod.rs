@@ -1,78 +1,97 @@
 mod error;
 mod acl;
 mod restart_manager;
+mod unlock_file;
+mod unload_dll;
 
 use error::DeleteError;
-use utils::windows;
 
-use std::{ffi::OsStr, ptr};
-use std::os::windows::prelude::*;
+use std::ptr;
 
-use windows_sys::{
-    core::*,
-    Win32::{
-        Foundation::*,
-        Security::*,
-        Security::Authorization::*,
-        Storage::FileSystem::*,
-        System::{
-            RestartManager::*,
-            Threading::*,
-        },
-    },
+use windows_sys::Win32::{
+    Storage::FileSystem::*,
 };
 
+use utils::windows;
 
-fn to_wide(s: &str) -> Vec<u16> {
-    OsStr::new(s).encode_wide().chain(Some(0)).collect()
-}
+pub(self) use restart_manager::{get_locking_processes};
+
+// Re-export DLL unloading functions
+pub use unlock_file::find_processes_with_loaded_module;
+pub use unload_dll::{
+    unload_dll_from_process,
+    unload_dll_from_all_processes,
+};
 
 //
 // ================= PUBLIC API =================
 //
 
 pub fn delete_file_force(path: &str) -> Result<(), DeleteError> {
-    if try_delete(path).is_ok() {
+    log::info!("Try delete file 1 time");
+    if try_delete(path) {
         return Ok(());
     }
 
     acl::fix_permissions(path)?;
 
-    if try_delete(path).is_ok() {
+    log::info!("Try delete file 2 time");
+    if try_delete(path) {
+        return Ok(());
+    }
+
+    // If the file is a DLL loaded by processes, try to unload it
+    let unloaded = unload_dll::unload_dll_from_all_processes(path);
+    if unloaded > 0 {
+        log::info!("Unloaded DLL from {} processes", unloaded);
+    }
+
+    log::info!("Try delete file 3 time");
+    if try_delete(path) {
         return Ok(());
     }
 
     let lockers = get_locking_processes(path)?;
     if !lockers.is_empty() {
-        println!("Locking processes:");
+        log::debug!("Locking processes:");
         for p in &lockers {
-            println!("PID: {}", p.Process.dwProcessId);
+            log::debug!("PID: {}", p.Process.dwProcessId);
         }
     }
 
-    close_locking_processes(path)?;
+    restart_manager::close_locking_processes(path)?;
 
-    if try_delete(path).is_ok() {
+    log::info!("Try delete file 4 time");
+    if try_delete(path) {
         return Ok(());
     }
 
+    unlock_file::unlock_file_force(path);
+
+    log::info!("Try delete file 5 time");
+    if try_delete(path) {
+        return Ok(());
+    }
+
+    
     schedule_delete_on_reboot(path)?;
 
-    Ok(())
+    Err("Failed to delete file. File is scheduled to remove after reboot".into())
 }
 
 //
 // ================= DELETE =================
 //
 
-fn try_delete(path: &str) -> Result<(), DeleteError> {
-    let w = to_wide(path);
+fn try_delete(path: &str) -> bool {
+    let w = windows::to_wide(path);
 
     unsafe {
-        if DeleteFileW(PCWSTR(w.as_ptr())).as_bool() {
-            Ok(())
+        if DeleteFileW(w.as_ptr()) != 0 {
+            true
         } else {
-            Err(last_err())
+            log::debug!("Failed to delete file: {}", DeleteError::last_err());
+            false
         }
     }
 }
@@ -83,17 +102,17 @@ fn try_delete(path: &str) -> Result<(), DeleteError> {
 //
 
 fn schedule_delete_on_reboot(path: &str) -> Result<(), DeleteError> {
-    let w = to_wide(path);
+    let w = windows::to_wide(path);
 
     unsafe {
-        MoveFileExW(
-            PCWSTR(w.as_ptr()),
-            PCWSTR(ptr::null()),
+        if MoveFileExW(
+            w.as_ptr(),
+            ptr::null(),
             MOVEFILE_DELAY_UNTIL_REBOOT,
-        )
-        .ok()
-        .map_err(|_| last_err())?;
+        ) != 0 {
+            Ok(())
+        } else {
+            Err(DeleteError::last_err())
+        }
     }
-
-    Ok(())
 }
