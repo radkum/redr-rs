@@ -11,10 +11,10 @@ utils = { path = "../utils" }
 
 bincode = { version = "2.0.0-rc.3", features = ["serde", "alloc"]}
 downcast-rs = "1.2.1"
-hex = "~0"
-log = "~0"
+hex = { workspace = true }
+log = { workspace = true }
 object = "0.33.0"
 serde = { version = "~1", features = ["derive"] }
 serde_yaml = "~0"
-sha2 = "~0"
-thiserror = "~1"
+sha2 = { workspace = true }
+thiserror = { workspace = true }

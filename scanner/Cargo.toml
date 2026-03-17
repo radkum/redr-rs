@@ -12,7 +12,7 @@ utils = { path = "../utils" }
 signatures = { path = "../signatures" }
 
 ansi_term = "~0"
-log = "~0"
-sha2 = "~0"
-thiserror = "~1"
-tokio = { version = "~1", features = ["full"] }
+log = { workspace = true }
+sha2 = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["full"] }

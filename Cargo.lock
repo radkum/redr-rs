@@ -1755,6 +1755,7 @@ dependencies = [
  "serde",
  "sha2",
  "shared",
+ "thiserror",
  "utils",
  "uuid",
  "widestring 0.4.3",
@@ -2609,6 +2610,7 @@ dependencies = [
  "shared",
  "thiserror",
  "tokio",
+ "windows-sys 0.61.2",
  "zip 0.4.2",
 ]
 

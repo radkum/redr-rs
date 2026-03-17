@@ -12,15 +12,15 @@ response = { path = "../response" }
 scanner = { path = "../scanner" }
 signatures = { path = "../signatures" }
 
+ansi_term = "~0"
 console = "~0"
 downcast-rs = "1.2.1"
-log = "~0"
-sha2 = "~0"
-thiserror = "~1"
+log = { workspace = true }
+sha2 = { workspace = true }
+thiserror = { workspace = true }
 widestring = "~1"
 tokio = { version = "1.36.0", features = ["full"] }
 winsafe = "~0"
-ansi_term = "~0"
 
 windows-sys = { workspace = true, features = [ "Win32_Storage",
     "Win32_Foundation",

@@ -1,7 +1,5 @@
 pub mod error;
-mod error_msg;
-mod handle_wrapper;
-pub mod winapi;
+mod print_error;
 
 use std::{
     fs::File,
@@ -36,7 +34,7 @@ use windows_sys::Win32::{
 };
 
 use crate::{
-    error_msg::{print_hr_result, print_last_error},
+    print_error::{print_hr_result, print_last_error},
     handle_wrapper::SmartHandle,
     winapi::output_debug_string,
 };

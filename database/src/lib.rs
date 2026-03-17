@@ -55,7 +55,7 @@ impl Database {
             .connect_with(opts)
             .await?;
 
-        let mut db = Self { pool };
+        let db = Self { pool };
         db.init().await?;
         Ok(db)
     }

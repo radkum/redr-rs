@@ -2,6 +2,8 @@ pub mod detection_report;
 pub mod encryption;
 pub mod redr;
 pub mod sha256_utils;
+pub mod windows;
+
 use std::{
     path::{Path, PathBuf},
     sync::LazyLock,
