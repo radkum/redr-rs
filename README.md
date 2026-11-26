@@ -1,6 +1,10 @@
 # redr-rs
 Rust Endpoint, Detection and Response
 
+> **RAMON:** the `ramon/` minifilter in this repository is an earlier iteration. The maintained
+> editions are [adkum/ramon-rs](https://github.com/radkum/ramon-rs) (2026, AI-assisted) and
+> [adkum/ramon-rs-legacy](https://github.com/radkum/ramon-rs-legacy) (2025, hand-written).
+
 ### Directory hierarchy
 **redr-km** - kernel part of redr. Ramon minifilter and other drivers
 
